@@ -176,6 +176,78 @@ export function SparklesIcon(props: IconProps) {
   )
 }
 
+export function ShareIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+      <polyline points="16 6 12 2 8 6" />
+      <line x1={12} y1={2} x2={12} y2={15} />
+    </svg>
+  )
+}
+
+export function MoreHorizIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2.2} {...base} {...props}>
+      <circle cx={12} cy={12} r={1.2} />
+      <circle cx={19} cy={12} r={1.2} />
+      <circle cx={5} cy={12} r={1.2} />
+    </svg>
+  )
+}
+
+export function BookIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2.4} {...base} {...props}>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  )
+}
+
+export function ThumbsUpIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <path d="M7 10v12" />
+      <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H7V10l4.66-9.32a1 1 0 0 1 1.73.13L15 5.88Z" />
+    </svg>
+  )
+}
+
+export function ThumbsDownIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <path d="M17 14V2" />
+      <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17v12l-4.66 9.32a1 1 0 0 1-1.73-.13L9 18.12Z" />
+    </svg>
+  )
+}
+
+export function CopyIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <rect x={9} y={9} width={13} height={13} rx={2} />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  )
+}
+
+export function AttachIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 17.93 8.8l-8.57 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+    </svg>
+  )
+}
+
+export function ArrowUpIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2.4} {...base} {...props}>
+      <path d="M12 19V5M5 12l7-7 7 7" />
+    </svg>
+  )
+}
+
 export function BrandMark(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" strokeWidth={1.8} {...base} {...props}>

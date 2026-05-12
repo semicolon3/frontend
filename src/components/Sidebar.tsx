@@ -19,7 +19,13 @@ const RECENTS: Recent[] = [
   { title: '온라인 환불 거부', meta: '2주 전' },
 ]
 
-export default function Sidebar({ active = 'home' }: { active?: SidebarKey }) {
+export default function Sidebar({
+  active = 'home',
+  activeRecent,
+}: {
+  active?: SidebarKey
+  activeRecent?: number
+}) {
   return (
     <aside className="bg-surface border-r border-line flex flex-col sticky top-0 h-screen">
       <div className="px-4 pt-5 pb-3 flex items-center gap-2">
@@ -43,9 +49,9 @@ export default function Sidebar({ active = 'home' }: { active?: SidebarKey }) {
         <NavLink to="/dashboard" active={active === 'home'} icon={<GridIcon className="w-4.5 h-4.5" />}>
           홈
         </NavLink>
-        <NavItem active={active === 'chat'} icon={<ChatBubbleIcon className="w-4.5 h-4.5" />}>
+        <NavLink to="/chat" active={active === 'chat'} icon={<ChatBubbleIcon className="w-4.5 h-4.5" />}>
           채팅
-        </NavItem>
+        </NavLink>
         <NavItem active={active === 'docs'} icon={<FileTextIcon className="w-4.5 h-4.5" />}>
           내 문서
         </NavItem>
@@ -61,29 +67,32 @@ export default function Sidebar({ active = 'home' }: { active?: SidebarKey }) {
       </div>
 
       <div className="px-2 flex flex-col gap-0.5 flex-1 overflow-y-auto">
-        {RECENTS.map((r, i) => (
-          <button
-            key={i}
-            type="button"
-            className={`flex items-center gap-2 py-2.5 px-3 rounded-[10px] text-left transition-colors ${
-              r.active ? 'bg-primary-soft' : 'hover:bg-bg'
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                r.active ? 'bg-primary' : 'bg-line-strong'
-              }`}
-            />
-            <span
-              className={`flex-1 min-w-0 truncate text-[13.5px] font-medium ${
-                r.active ? 'text-primary font-semibold' : 'text-ink-soft'
+        {RECENTS.map((r, i) => {
+          const isActive = activeRecent === i
+          return (
+            <button
+              key={i}
+              type="button"
+              className={`flex items-center gap-2 py-2.5 px-3 rounded-[10px] text-left transition-colors ${
+                isActive ? 'bg-primary-soft' : 'hover:bg-bg'
               }`}
             >
-              {r.title}
-            </span>
-            <span className="text-[11.5px] text-ink-mute font-normal">{r.meta}</span>
-          </button>
-        ))}
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  isActive ? 'bg-primary' : 'bg-line-strong'
+                }`}
+              />
+              <span
+                className={`flex-1 min-w-0 truncate text-[13.5px] ${
+                  isActive ? 'text-primary font-semibold' : 'text-ink-soft font-medium'
+                }`}
+              >
+                {r.title}
+              </span>
+              <span className="text-[11.5px] text-ink-mute font-normal">{r.meta}</span>
+            </button>
+          )
+        })}
       </div>
 
       <button

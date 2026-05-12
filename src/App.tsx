@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import ChatDiagnosisPage from './pages/ChatDiagnosisPage'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -10,6 +11,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/chat" element={<ChatDiagnosisPage />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
