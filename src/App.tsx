@@ -1,9 +1,7 @@
+import LoginPage from './pages/LoginPage'
+
 function App() {
-  return (
-    <div>
-      <h1 className="text-3xl font-bold">Hello, Semicolon!</h1>
-    </div>
-  )
+  return <LoginPage />
 }
 
 export default App
