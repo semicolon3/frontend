@@ -11,9 +11,9 @@ import type { ReactNode } from 'react'
 
 export type SidebarKey = 'home' | 'chat' | 'docs' | 'cases'
 
-type Recent = { title: string; meta: string; active?: boolean }
+export type Recent = { title: string; meta: string }
 
-const RECENTS: Recent[] = [
+const DEFAULT_RECENTS: Recent[] = [
   { title: '보증금 미반환 분쟁', meta: '3일 전' },
   { title: '야근수당 미지급', meta: '1주 전' },
   { title: '온라인 환불 거부', meta: '2주 전' },
@@ -22,9 +22,13 @@ const RECENTS: Recent[] = [
 export default function Sidebar({
   active = 'home',
   activeRecent,
+  recents = DEFAULT_RECENTS,
+  recentsLabel = '최근 대화',
 }: {
   active?: SidebarKey
   activeRecent?: number
+  recents?: Recent[]
+  recentsLabel?: string
 }) {
   return (
     <aside className="bg-surface border-r border-line flex flex-col sticky top-0 h-screen">
@@ -52,9 +56,9 @@ export default function Sidebar({
         <NavLink to="/chat" active={active === 'chat'} icon={<ChatBubbleIcon className="w-4.5 h-4.5" />}>
           채팅
         </NavLink>
-        <NavItem active={active === 'docs'} icon={<FileTextIcon className="w-4.5 h-4.5" />}>
+        <NavLink to="/docs" active={active === 'docs'} icon={<FileTextIcon className="w-4.5 h-4.5" />}>
           내 문서
-        </NavItem>
+        </NavLink>
         <NavItem active={active === 'cases'} icon={<FolderCaseIcon className="w-4.5 h-4.5" />}>
           사건 관리
         </NavItem>
@@ -63,11 +67,11 @@ export default function Sidebar({
       <div className="h-px bg-line mx-4" />
 
       <div className="px-4 pt-4 pb-1.5 text-xs text-ink-mute font-medium tracking-[0.01em]">
-        최근 대화
+        {recentsLabel}
       </div>
 
       <div className="px-2 flex flex-col gap-0.5 flex-1 overflow-y-auto">
-        {RECENTS.map((r, i) => {
+        {recents.map((r, i) => {
           const isActive = activeRecent === i
           return (
             <button

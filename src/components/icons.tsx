@@ -248,6 +248,54 @@ export function ArrowUpIcon(props: IconProps) {
   )
 }
 
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  )
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1={12} y1={15} x2={12} y2={3} />
+    </svg>
+  )
+}
+
+export function MinusIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <line x1={5} y1={12} x2={19} y2={12} />
+    </svg>
+  )
+}
+
+export function AlertTriangleIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2.4} {...base} {...props}>
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1={12} y1={9} x2={12} y2={13} />
+      <line x1={12} y1={17} x2={12.01} y2={17} />
+    </svg>
+  )
+}
+
+export function ShareNetworkIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <circle cx={18} cy={5} r={3} />
+      <circle cx={6} cy={12} r={3} />
+      <circle cx={18} cy={19} r={3} />
+      <line x1={8.59} y1={13.51} x2={15.42} y2={17.49} />
+      <line x1={15.41} y1={6.51} x2={8.59} y2={10.49} />
+    </svg>
+  )
+}
+
 export function BrandMark(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" strokeWidth={1.8} {...base} {...props}>
