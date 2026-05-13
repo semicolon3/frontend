@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+
+  --color-bg: #f9fafb;
+  --color-surface: #ffffff;
+  --color-primary: #3182f6;
+  --color-primary-hover: #1b64da;
+  --color-primary-soft: #e8f2fe;
+  --color-ink: #191f28;
+  --color-ink-soft: #4e5968;
+  --color-ink-mute: #8b95a1;
+  --color-line: #e5e8eb;
+  --color-line-strong: #d1d6db;
+  --color-bg-soft-2: #f2f4f6;
+  --color-bg-soft-3: #f7f9fb;
+  --color-danger: #f04452;
+  --color-warn: #ff9500;
+  --color-success: #00c73c;
+
+  --color-primary-lighter: #f3f8ff;
+  --color-violet: #8b5cf6;
+  --color-violet-soft: #f3eeff;
+  --color-warn-soft: #fff4e5;
+  --color-success-soft: #e5f8eb;
+  --color-ink-quat: #b0b8c1;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(17, 24, 39, 0.06);
+  --shadow-popover: 0 8px 28px rgba(17, 24, 39, 0.1);
+  --shadow-card-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-card-md: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 6px 16px rgba(0, 0, 0, 0.05), 0 16px 40px rgba(0, 0, 0, 0.08);
+  --shadow-panel: -16px 0 40px rgba(20, 30, 50, 0.1);
+
+  --color-risk-high-bg: #fee2e2;
+  --color-risk-mid: #f59e0b;
+  --color-risk-mid-bg: #fef3c7;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
