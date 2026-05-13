@@ -114,18 +114,15 @@ export default function Sidebar({
         })}
       </div>
 
-      <button
-        type="button"
+      <Link
+        to="/account"
         className="m-2 py-2.5 px-3 flex items-center gap-2.5 rounded-xl bg-bg hover:bg-bg-soft-2 transition-colors"
       >
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#b8d4ff] to-primary text-white grid place-items-center text-[13px] font-semibold shrink-0">
           홍
         </div>
         <span className="flex-1 text-sm font-semibold text-ink text-left">홍길동</span>
-        <span className="text-[10.5px] font-semibold text-ink-mute bg-surface border border-line py-0.5 px-1.5 rounded-full tracking-[0.02em]">
-          FREE
-        </span>
-      </button>
+      </Link>
     </aside>
     </>
   )
