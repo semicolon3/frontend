@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import {
@@ -9,6 +9,8 @@ import {
   MenuIcon,
 } from '../components/icons'
 import { logout } from '../api/auth'
+import { clearTokens } from '../api/client'
+import { fetchMe, deleteMe, updateMe, changePassword, type UserMe } from '../api/user'
 
 function CameraIcon() {
   return (
@@ -134,12 +136,35 @@ function GhostBtn({ children, onClick }: { children: ReactNode; onClick?: () => 
 
 export default function AccountPage() {
   const navigate = useNavigate()
+  const [me, setMe] = useState<UserMe | null>(null)
+  const [editingName, setEditingName] = useState(false)
+  const [editingPhone, setEditingPhone] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { fetchMe().then(setMe).catch(() => {}) }, [])
+
+  const handleSaveField = async (field: 'name' | 'phone') => {
+    setSaving(true)
+    try {
+      const updated = await updateMe(field === 'name' ? { name: editName.trim() } : { phone: editPhone.trim() })
+      setMe(updated)
+      if (field === 'name') setEditingName(false)
+      else setEditingPhone(false)
+    } catch {}
+    finally { setSaving(false) }
+  }
+
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
   const [showNew, setShowNew] = useState(false)
+  const [pwSaving, setPwSaving] = useState(false)
+  const [pwError, setPwError] = useState<string | null>(null)
+  const [pwSuccess, setPwSuccess] = useState(false)
 
   const [notifyDiagnosis, setNotifyDiagnosis] = useState(true)
   const [notifyMarketing, setNotifyMarketing] = useState(false)
@@ -154,7 +179,11 @@ export default function AccountPage() {
     navigate('/login')
   }
 
-  const handleWithdraw = () => {
+  const handleWithdraw = async () => {
+    try {
+      await deleteMe()
+    } catch {}
+    clearTokens()
     navigate('/')
   }
 
@@ -191,7 +220,7 @@ export default function AccountPage() {
             <div className="bg-surface border border-line rounded-[20px] p-6 md:p-7 flex items-center gap-5 mb-5">
               <div className="relative shrink-0">
                 <div className="w-18 h-18 rounded-full bg-linear-to-br from-[#b8d4ff] to-primary text-white grid place-items-center text-[26px] font-bold">
-                  홍
+                  {me?.name?.[0] ?? '?'}
                 </div>
                 <button
                   type="button"
@@ -202,13 +231,13 @@ export default function AccountPage() {
                 </button>
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-bold text-ink m-0 mb-1 tracking-tight">홍길동</h2>
-                <p className="text-sm text-ink-soft m-0">hong@example.com</p>
-                <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-2 text-[12.5px] text-ink-mute">
-                  <span>2025년 8월 12일 가입</span>
-                  <span className="text-line-strong">·</span>
-                  <span>최근 접속 2분 전</span>
-                </div>
+                <h2 className="text-xl font-bold text-ink m-0 mb-1 tracking-tight">{me?.name ?? '—'}</h2>
+                <p className="text-sm text-ink-soft m-0">{me?.email ?? '—'}</p>
+                {me && (
+                  <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-2 text-[12.5px] text-ink-mute">
+                    <span>{new Date(me.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })} 가입</span>
+                  </div>
+                )}
               </div>
               <button
                 type="button"
@@ -222,20 +251,65 @@ export default function AccountPage() {
             {/* 내 정보 */}
             <Card>
               <CardHead title="내 정보" desc="다른 사용자에게 표시되거나 알림 발송에 사용되는 정보입니다." />
-              <Row label="이름" action={<GhostBtn>변경</GhostBtn>}>홍길동</Row>
-              <Row label="이메일" action={<GhostBtn>변경</GhostBtn>}>
-                hong@example.com
-                <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-success bg-[#e5f8eb] py-0.5 px-2 rounded-full">
-                  <CheckIcon className="w-2.5 h-2.5" />
-                  인증됨
-                </span>
+              <Row
+                label="이름"
+                action={
+                  editingName ? (
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setEditingName(false)} className="h-8 px-3 rounded-[10px] text-[13px] font-semibold bg-bg text-ink-soft hover:bg-bg-soft-2 transition-colors">취소</button>
+                      <button type="button" disabled={saving || !editName.trim()} onClick={() => handleSaveField('name')} className="h-8 px-3 rounded-[10px] text-[13px] font-semibold bg-primary text-white hover:bg-primary-hover disabled:opacity-50 transition-colors">저장</button>
+                    </div>
+                  ) : (
+                    <GhostBtn onClick={() => { setEditName(me?.name ?? ''); setEditingName(true) }}>변경</GhostBtn>
+                  )
+                }
+              >
+                {editingName ? (
+                  <input
+                    autoFocus
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSaveField('name'); if (e.key === 'Escape') setEditingName(false) }}
+                    className="h-9 px-3 rounded-[10px] border-[1.5px] border-primary bg-surface text-sm text-ink outline-none max-w-60 w-full focus:ring-[3px] focus:ring-primary/12"
+                  />
+                ) : me?.name ?? '—'}
               </Row>
-              <Row label="휴대폰" action={<GhostBtn>변경</GhostBtn>}>
-                010-1234-5678
-                <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-success bg-[#e5f8eb] py-0.5 px-2 rounded-full">
-                  <CheckIcon className="w-2.5 h-2.5" />
-                  본인인증
-                </span>
+
+              <Row label="이메일" action={<GhostBtn>변경</GhostBtn>}>
+                {me?.email ?? '—'}
+                {me?.email && (
+                  <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-success bg-success-soft py-0.5 px-2 rounded-full">
+                    <CheckIcon className="w-2.5 h-2.5" />
+                    인증됨
+                  </span>
+                )}
+              </Row>
+
+              <Row
+                label="휴대폰"
+                action={
+                  editingPhone ? (
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setEditingPhone(false)} className="h-8 px-3 rounded-[10px] text-[13px] font-semibold bg-bg text-ink-soft hover:bg-bg-soft-2 transition-colors">취소</button>
+                      <button type="button" disabled={saving} onClick={() => handleSaveField('phone')} className="h-8 px-3 rounded-[10px] text-[13px] font-semibold bg-primary text-white hover:bg-primary-hover disabled:opacity-50 transition-colors">저장</button>
+                    </div>
+                  ) : (
+                    <GhostBtn onClick={() => { setEditPhone(me?.phone ?? ''); setEditingPhone(true) }}>변경</GhostBtn>
+                  )
+                }
+              >
+                {editingPhone ? (
+                  <input
+                    autoFocus
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSaveField('phone'); if (e.key === 'Escape') setEditingPhone(false) }}
+                    placeholder="010-0000-0000"
+                    className="h-9 px-3 rounded-[10px] border-[1.5px] border-primary bg-surface text-sm text-ink outline-none max-w-60 w-full focus:ring-[3px] focus:ring-primary/12"
+                  />
+                ) : me?.phone || <span className="text-ink-mute text-[13.5px]">미등록</span>}
               </Row>
             </Card>
 
@@ -289,14 +363,34 @@ export default function AccountPage() {
                       placeholder="새 비밀번호를 한 번 더 입력"
                       className="h-10 px-3.5 rounded-[10px] border-[1.5px] border-line bg-surface text-sm text-ink outline-none w-full transition-all hover:border-line-strong focus:border-primary focus:ring-[3px] focus:ring-primary/12"
                     />
-                    <p className="text-[12.5px] text-ink-mute mt-1.5">최근 사용한 비밀번호와 같은 비밀번호는 사용할 수 없어요.</p>
+                    {pwError && <p className="text-[12.5px] text-danger mt-1.5">{pwError}</p>}
+                    {pwSuccess && <p className="text-[12.5px] text-success mt-1.5">비밀번호가 변경됐습니다.</p>}
+                    {newPw && confirmPw && newPw !== confirmPw && (
+                      <p className="text-[12.5px] text-danger mt-1.5">새 비밀번호가 일치하지 않습니다.</p>
+                    )}
                   </div>
                   <button
                     type="button"
-                    disabled={!currentPw || !newPw || !confirmPw}
+                    disabled={pwSaving || !currentPw || !newPw || !confirmPw || newPw !== confirmPw}
+                    onClick={async () => {
+                      setPwError(null)
+                      setPwSuccess(false)
+                      setPwSaving(true)
+                      try {
+                        await changePassword(currentPw, newPw)
+                        setCurrentPw('')
+                        setNewPw('')
+                        setConfirmPw('')
+                        setPwSuccess(true)
+                      } catch (err) {
+                        setPwError(err instanceof Error ? err.message : '변경에 실패했습니다.')
+                      } finally {
+                        setPwSaving(false)
+                      }
+                    }}
                     className="h-9 px-4 rounded-[10px] bg-primary text-white text-[13.5px] font-semibold inline-flex items-center transition-colors hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed shrink-0 self-start"
                   >
-                    비밀번호 변경
+                    {pwSaving ? '변경 중…' : '비밀번호 변경'}
                   </button>
                 </div>
               </div>
