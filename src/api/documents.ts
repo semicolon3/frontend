@@ -1,4 +1,4 @@
-const BASE_URL = 'https://port-0-legal-ai-mp2pi1ad2d46dc8d.sel3.cloudtype.app'
+import { apiFetch } from './client'
 
 export type Document = {
   id: number
@@ -25,20 +25,6 @@ type SingleApiResponse = {
 
 export type DocumentType = 'CONTRACT' | 'KAKAO_CHAT' | 'RECEIPT' | 'OTHER'
 
-export async function fetchDocuments(): Promise<Document[]> {
-  const res = await fetch(`${BASE_URL}/api/documents`)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const json: ApiResponse = await res.json()
-  return json.data
-}
-
-export async function fetchDocumentById(id: number): Promise<Document> {
-  const res = await fetch(`${BASE_URL}/api/documents/${id}`)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const json: SingleApiResponse = await res.json()
-  return json.data
-}
-
 export type RiskClause = {
   clauseTitle: string
   description: string
@@ -59,22 +45,36 @@ type AnalysisApiResponse = {
   data: DocumentAnalysis
 }
 
+export async function fetchDocuments(): Promise<Document[]> {
+  const res = await apiFetch('/api/documents')
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json: ApiResponse = await res.json()
+  return json.data
+}
+
+export async function fetchDocumentById(id: number): Promise<Document> {
+  const res = await apiFetch(`/api/documents/${id}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const json: SingleApiResponse = await res.json()
+  return json.data
+}
+
 export async function fetchDocumentAnalysis(id: number): Promise<DocumentAnalysis> {
-  const res = await fetch(`${BASE_URL}/api/documents/${id}/analysis`)
+  const res = await apiFetch(`/api/documents/${id}/analysis`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json: AnalysisApiResponse = await res.json()
   return json.data
 }
 
 export async function deleteDocument(id: number): Promise<void> {
-  const res = await fetch(`${BASE_URL}/api/documents/${id}`, { method: 'DELETE' })
+  const res = await apiFetch(`/api/documents/${id}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
 }
 
 export async function uploadDocument(file: File, documentType: DocumentType = 'OTHER'): Promise<Document> {
   const form = new FormData()
   form.append('file', file)
-  const res = await fetch(`${BASE_URL}/api/documents?documentType=${documentType}`, {
+  const res = await apiFetch(`/api/documents?documentType=${documentType}`, {
     method: 'POST',
     body: form,
   })

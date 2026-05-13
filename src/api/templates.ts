@@ -1,4 +1,4 @@
-const BASE_URL = 'https://port-0-legal-ai-mp2pi1ad2d46dc8d.sel3.cloudtype.app'
+import { apiFetch } from './client'
 
 export type DocumentTemplate = {
   id: number
@@ -16,7 +16,7 @@ type ApiResponse = {
 }
 
 export async function fetchTemplates(): Promise<DocumentTemplate[]> {
-  const res = await fetch(`${BASE_URL}/api/document-templates`)
+  const res = await apiFetch('/api/document-templates')
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json: ApiResponse = await res.json()
   return json.data

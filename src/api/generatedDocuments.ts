@@ -1,4 +1,4 @@
-const BASE_URL = 'https://port-0-legal-ai-mp2pi1ad2d46dc8d.sel3.cloudtype.app'
+import { apiFetch } from './client'
 
 export type GeneratedDocument = {
   id: number
@@ -16,11 +16,10 @@ type ApiResponse = {
   data: GeneratedDocument[]
 }
 
-export async function fetchGeneratedDocuments(): Promise<GeneratedDocument[]> {
-  const res = await fetch(`${BASE_URL}/api/generated-documents`)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const json: ApiResponse = await res.json()
-  return json.data
+type SingleApiResponse = {
+  success: boolean
+  message: string
+  data: GeneratedDocument
 }
 
 export type CreateDocumentRequest = {
@@ -29,32 +28,33 @@ export type CreateDocumentRequest = {
   fields: Record<string, string>
 }
 
-type CreateApiResponse = {
-  success: boolean
-  message: string
-  data: GeneratedDocument
-}
-
-export async function downloadDocumentPdf(id: number): Promise<Blob> {
-  const res = await fetch(`${BASE_URL}/api/generated-documents/${id}/pdf`)
+export async function fetchGeneratedDocuments(): Promise<GeneratedDocument[]> {
+  const res = await apiFetch('/api/generated-documents')
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.blob()
+  const json: ApiResponse = await res.json()
+  return json.data
 }
 
 export async function fetchGeneratedDocumentById(id: number): Promise<GeneratedDocument> {
-  const res = await fetch(`${BASE_URL}/api/generated-documents/${id}`)
+  const res = await apiFetch(`/api/generated-documents/${id}`)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const json: CreateApiResponse = await res.json()
+  const json: SingleApiResponse = await res.json()
   return json.data
 }
 
 export async function createGeneratedDocument(body: CreateDocumentRequest): Promise<GeneratedDocument> {
-  const res = await fetch(`${BASE_URL}/api/generated-documents`, {
+  const res = await apiFetch('/api/generated-documents', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const json: CreateApiResponse = await res.json()
+  const json: SingleApiResponse = await res.json()
   return json.data
+}
+
+export async function downloadDocumentPdf(id: number): Promise<Blob> {
+  const res = await apiFetch(`/api/generated-documents/${id}/pdf`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.blob()
 }
