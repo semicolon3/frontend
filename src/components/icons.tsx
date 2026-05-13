@@ -296,6 +296,16 @@ export function ShareNetworkIcon(props: IconProps) {
   )
 }
 
+export function MenuIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={2} {...base} {...props}>
+      <line x1={3} y1={6} x2={21} y2={6} />
+      <line x1={3} y1={12} x2={21} y2={12} />
+      <line x1={3} y1={18} x2={21} y2={18} />
+    </svg>
+  )
+}
+
 export function BrandMark(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" strokeWidth={1.8} {...base} {...props}>
