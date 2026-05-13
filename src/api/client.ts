@@ -7,14 +7,20 @@ export function getAccessToken(): string | null {
   return localStorage.getItem('accessToken')
 }
 
-export function setTokens(accessToken: string, refreshToken: string): void {
+export function getEmail(): string | null {
+  return localStorage.getItem('userEmail')
+}
+
+export function setTokens(accessToken: string, refreshToken: string, email?: string): void {
   localStorage.setItem('accessToken', accessToken)
   localStorage.setItem('refreshToken', refreshToken)
+  if (email) localStorage.setItem('userEmail', email)
 }
 
 export function clearTokens(): void {
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
+  localStorage.removeItem('userEmail')
 }
 
 function authHeaders(init: RequestInit): HeadersInit {

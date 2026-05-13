@@ -1,4 +1,4 @@
-import { apiFetch, setTokens } from './client'
+import { apiFetch, setTokens, clearTokens } from './client'
 
 type SignupRequest = {
   email: string
@@ -19,6 +19,11 @@ type AuthResponse = {
   data: AuthData
 }
 
+
+export async function logout(): Promise<void> {
+  await apiFetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
+  clearTokens()
+}
 
 export async function login(email: string, password: string): Promise<AuthData> {
   const res = await apiFetch('/api/auth/login', {
