@@ -8,7 +8,7 @@ import {
   EyeOffIcon,
   MenuIcon,
 } from '../components/icons'
-import { clearTokens } from '../api/client'
+import { logout } from '../api/auth'
 
 function CameraIcon() {
   return (
@@ -90,9 +90,9 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
       role="switch"
       aria-checked={on}
       onClick={onToggle}
-      className={`relative w-[42px] h-6 rounded-full transition-colors shrink-0 ${on ? 'bg-primary' : 'bg-line-strong'}`}
+      className={`relative w-10.5 h-6 rounded-full transition-colors shrink-0 ${on ? 'bg-primary' : 'bg-line-strong'}`}
     >
-      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${on ? 'translate-x-[18px]' : ''}`} />
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${on ? 'translate-x-4.5' : ''}`} />
     </button>
   )
 }
@@ -103,7 +103,7 @@ function Card({ children }: { children: ReactNode }) {
 
 function CardHead({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="px-7 pt-[22px] pb-1.5">
+    <div className="px-7 pt-5.5 pb-1.5">
       <h2 className="text-base font-bold text-ink m-0 tracking-[-0.015em]">{title}</h2>
       <p className="text-[13px] text-ink-mute mt-1 m-0">{desc}</p>
     </div>
@@ -125,7 +125,7 @@ function GhostBtn({ children, onClick }: { children: ReactNode; onClick?: () => 
     <button
       type="button"
       onClick={onClick}
-      className="h-8 px-3 rounded-[10px] text-[13px] font-semibold bg-bg text-ink-soft hover:bg-[#f2f4f6] hover:text-ink transition-colors"
+      className="h-8 px-3 rounded-[10px] text-[13px] font-semibold bg-bg text-ink-soft hover:bg-bg-soft-2 hover:text-ink transition-colors"
     >
       {children}
     </button>
@@ -149,13 +149,12 @@ export default function AccountPage() {
 
   const pwLevel = scorePassword(newPw)
 
-  const handleLogout = () => {
-    clearTokens()
+  const handleLogout = async () => {
+    await logout()
     navigate('/login')
   }
 
   const handleWithdraw = () => {
-    clearTokens()
     navigate('/')
   }
 
@@ -182,7 +181,7 @@ export default function AccountPage() {
             </div>
           </header>
 
-          <div className="flex-1 px-5 md:px-10 pt-8 pb-16 max-w-[920px] w-full mx-auto">
+          <div className="flex-1 px-5 md:px-10 pt-8 pb-16 max-w-230 w-full mx-auto">
             <div className="mb-7">
               <h1 className="text-[26px] font-bold text-ink m-0 mb-1.5 tracking-tight">내 계정</h1>
               <p className="text-[14.5px] text-ink-soft m-0">프로필, 보안, 알림 등 계정에 관한 설정을 관리할 수 있어요.</p>
@@ -191,7 +190,7 @@ export default function AccountPage() {
             {/* 프로필 히어로 */}
             <div className="bg-surface border border-line rounded-[20px] p-6 md:p-7 flex items-center gap-5 mb-5">
               <div className="relative shrink-0">
-                <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-[#b8d4ff] to-primary text-white grid place-items-center text-[26px] font-bold">
+                <div className="w-18 h-18 rounded-full bg-linear-to-br from-[#b8d4ff] to-primary text-white grid place-items-center text-[26px] font-bold">
                   홍
                 </div>
                 <button
@@ -340,7 +339,7 @@ export default function AccountPage() {
 
             {/* 회원탈퇴 */}
             <div className="bg-surface border border-[#ffd7db] rounded-[18px] mb-5 overflow-hidden">
-              <div className="px-7 pt-[22px] pb-1.5">
+              <div className="px-7 pt-5.5 pb-1.5">
                 <h2 className="text-base font-bold text-danger m-0 tracking-[-0.015em]">회원 탈퇴</h2>
                 <p className="text-[13px] text-ink-mute mt-1 m-0">계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없어요.</p>
               </div>
@@ -407,7 +406,7 @@ export default function AccountPage() {
               <button
                 type="button"
                 onClick={() => { setWithdrawOpen(false); setWithdrawInput('') }}
-                className="h-11 px-5 rounded-[10px] bg-bg text-ink-soft text-[14.5px] font-semibold hover:bg-[#f2f4f6] hover:text-ink transition-colors"
+                className="h-11 px-5 rounded-[10px] bg-bg text-ink-soft text-[14.5px] font-semibold hover:bg-bg-soft-2 hover:text-ink transition-colors"
               >
                 취소
               </button>
