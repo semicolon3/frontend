@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Sidebar, { type Recent } from '../components/Sidebar'
 import { createGeneratedDocument, downloadDocumentPdf } from '../api/generatedDocuments'
 import { fetchTemplates, type DocumentTemplate } from '../api/templates'
@@ -58,6 +59,13 @@ export default function DocumentAnalysisPage() {
   }, [])
 
   useEffect(() => { loadRecents() }, [])
+
+  const [searchParams] = useSearchParams()
+  useEffect(() => {
+    const id = searchParams.get('id')
+    if (id) handleRecentClick(Number(id))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   const handleRecentClick = (id: number) => {
     setAnalysisData(null)
