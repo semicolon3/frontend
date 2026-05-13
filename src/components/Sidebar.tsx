@@ -11,7 +11,7 @@ import type { ReactNode } from 'react'
 
 export type SidebarKey = 'home' | 'chat' | 'docs' | 'cases'
 
-export type Recent = { title: string; meta: string }
+export type Recent = { id?: number; title: string; meta: string }
 
 const DEFAULT_RECENTS: Recent[] = [
   { title: '보증금 미반환 분쟁', meta: '3일 전' },
@@ -26,6 +26,7 @@ export default function Sidebar({
   recentsLabel = '최근 대화',
   mobileOpen = false,
   onMobileClose,
+  onRecentClick,
 }: {
   active?: SidebarKey
   activeRecent?: number
@@ -33,6 +34,7 @@ export default function Sidebar({
   recentsLabel?: string
   mobileOpen?: boolean
   onMobileClose?: () => void
+  onRecentClick?: (id: number) => void
 }) {
   return (
     <>
@@ -89,6 +91,7 @@ export default function Sidebar({
             <button
               key={i}
               type="button"
+              onClick={() => r.id != null && onRecentClick?.(r.id)}
               className={`flex items-center gap-2 py-2.5 px-3 rounded-[10px] text-left transition-colors ${
                 isActive ? 'bg-primary-soft' : 'hover:bg-bg'
               }`}
