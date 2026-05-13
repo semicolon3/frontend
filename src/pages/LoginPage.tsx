@@ -1,14 +1,30 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Topbar from '../components/Topbar'
 import { EyeIcon, EyeOffIcon } from '../components/icons'
+import { login } from '../api/auth'
 
 export default function LoginPage() {
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setError(null)
+    setSubmitting(true)
+    try {
+      await login(email.trim(), password)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '로그인에 실패했습니다.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -47,6 +63,8 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   placeholder="example@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full h-13 px-4 bg-white border border-line rounded-xl text-[15px] text-ink placeholder:text-ink-mute outline-none transition-colors hover:border-line-strong focus:border-primary focus:ring-4 focus:ring-primary/15"
                 />
               </div>
@@ -65,6 +83,8 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     placeholder="비밀번호 입력"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="w-full h-13 pl-4 pr-13 bg-white border border-line rounded-xl text-[15px] text-ink placeholder:text-ink-mute outline-none transition-colors hover:border-line-strong focus:border-primary focus:ring-4 focus:ring-primary/15"
                   />
                   <button
@@ -109,11 +129,15 @@ export default function LoginPage() {
                 </a>
               </div>
 
+              {error && (
+                <p className="text-[13px] text-danger text-center -mb-1">{error}</p>
+              )}
               <button
                 type="submit"
-                className="w-full h-14 rounded-[14px] bg-primary text-white text-base font-semibold tracking-[-0.01em] mt-3 transition-colors hover:bg-primary-hover active:translate-y-px"
+                disabled={submitting || !email || !password}
+                className="w-full h-14 rounded-[14px] bg-primary text-white text-base font-semibold tracking-[-0.01em] mt-3 transition-colors hover:bg-primary-hover active:translate-y-px disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                로그인
+                {submitting ? '로그인 중…' : '로그인'}
               </button>
             </form>
 
