@@ -5,13 +5,12 @@ import {
   BrandMark,
   ChatBubbleIcon,
   FileTextIcon,
-  FolderCaseIcon,
   GridIcon,
   PlusIcon,
 } from './icons'
 import type { ReactNode } from 'react'
 
-export type SidebarKey = 'home' | 'chat' | 'docs' | 'cases'
+export type SidebarKey = 'home' | 'chat' | 'docs'
 
 export type Recent = { id?: number; title: string; meta: string }
 
@@ -95,9 +94,6 @@ export default function Sidebar({
         <NavLink to="/documents" active={active === 'docs'} icon={<FileTextIcon className="w-4.5 h-4.5" />}>
           내 문서
         </NavLink>
-        <NavItem active={active === 'cases'} icon={<FolderCaseIcon className="w-4.5 h-4.5" />}>
-          사건 관리
-        </NavItem>
       </nav>
 
       <div className="h-px bg-line mx-4" />
@@ -169,22 +165,6 @@ function NavLink({
   )
 }
 
-function NavItem({
-  active,
-  icon,
-  children,
-}: {
-  active: boolean
-  icon: ReactNode
-  children: ReactNode
-}) {
-  return (
-    <button type="button" className={navItemClass(active)}>
-      <span className={iconClass(active)}>{icon}</span>
-      <span>{children}</span>
-    </button>
-  )
-}
 
 function navItemClass(active: boolean) {
   return `flex items-center gap-2.5 py-2.5 px-3 rounded-[10px] text-sm transition-colors text-left w-full ${
