@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import AccountPage from './pages/AccountPage'
 import ChatDiagnosisPage from './pages/ChatDiagnosisPage'
 import DashboardPage from './pages/DashboardPage'
 import DocumentAnalysisPage from './pages/DocumentAnalysisPage'
@@ -15,6 +16,7 @@ function App() {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/chat" element={<ChatDiagnosisPage />} />
       <Route path="/docs" element={<DocumentAnalysisPage />} />
+      <Route path="/account" element={<AccountPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
