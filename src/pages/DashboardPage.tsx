@@ -3,7 +3,6 @@ import Sidebar from '../components/Sidebar'
 import {
   ArrowRightIcon,
   BellIcon,
-  BoltIcon,
   SearchIcon,
   SettingsIcon,
   SparklesIcon,
@@ -93,17 +92,13 @@ export default function DashboardPage() {
         </header>
 
         <div className="flex-1 px-10 pt-10 pb-14 max-w-[1180px] w-full mx-auto">
-          <div className="grid grid-cols-[1fr_320px] gap-8 items-start mb-9">
-            <div>
-              <h1 className="text-[32px] font-bold text-ink m-0 mb-2 tracking-[-0.025em] leading-[1.25]">
-                안녕하세요, 홍길동님 <span aria-hidden>👋</span>
-              </h1>
-              <p className="text-base text-ink-soft m-0 leading-normal">
-                오늘은 어떤 도움이 필요하세요?
-              </p>
-            </div>
-
-            <UsageCard used={3} total={5} />
+          <div className="mb-9">
+            <h1 className="text-[32px] font-bold text-ink m-0 mb-2 tracking-[-0.025em] leading-[1.25]">
+              안녕하세요, 홍길동님 <span aria-hidden>👋</span>
+            </h1>
+            <p className="text-base text-ink-soft m-0 leading-normal">
+              오늘은 어떤 도움이 필요하세요?
+            </p>
           </div>
 
           <div className="flex items-baseline justify-between mb-4">
@@ -180,41 +175,6 @@ function IconBtn({ label, children }: { label: string; children: ReactNode }) {
     >
       {children}
     </button>
-  )
-}
-
-function UsageCard({ used, total }: { used: number; total: number }) {
-  const pct = Math.min(100, Math.round((used / total) * 100))
-  return (
-    <div className="bg-primary-lighter border border-[#d7e8ff] rounded-2xl py-4.5 px-5">
-      <div className="flex items-center justify-between mb-3">
-        <span className="flex items-center gap-1.5 text-[13px] font-semibold text-ink-soft">
-          <BoltIcon className="w-3.5 h-3.5" />
-          이번 달 사용량
-        </span>
-        <span className="text-[13.5px] font-bold text-primary tabular-nums">
-          {used}
-          <span className="text-ink-mute font-medium"> / {total}회</span>
-        </span>
-      </div>
-      <div className="h-1.5 rounded-full bg-[#d7e8ff] overflow-hidden">
-        <div
-          className="h-full bg-primary rounded-full"
-          style={{ width: `${pct}%` }}
-          aria-hidden
-        />
-      </div>
-      <div className="mt-3 flex items-center justify-between text-[12.5px] text-ink-mute">
-        <span>매월 1일 초기화</span>
-        <a
-          href="#"
-          className="text-primary font-semibold inline-flex items-center gap-0.5 text-[13px] hover:text-primary-hover"
-        >
-          Pro로 업그레이드
-          <ArrowRightIcon className="w-3 h-3" />
-        </a>
-      </div>
-    </div>
   )
 }
 
