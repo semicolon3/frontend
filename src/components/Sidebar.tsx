@@ -24,14 +24,26 @@ export default function Sidebar({
   activeRecent,
   recents = DEFAULT_RECENTS,
   recentsLabel = '최근 대화',
+  mobileOpen = false,
+  onMobileClose,
 }: {
   active?: SidebarKey
   activeRecent?: number
   recents?: Recent[]
   recentsLabel?: string
+  mobileOpen?: boolean
+  onMobileClose?: () => void
 }) {
   return (
-    <aside className="bg-surface border-r border-line flex flex-col sticky top-0 h-screen">
+    <>
+      <div
+        aria-hidden
+        onClick={onMobileClose}
+        className={`fixed inset-0 bg-black/30 z-40 transition-opacity duration-300 lg:hidden ${
+          mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      />
+    <aside className={`bg-surface border-r border-line flex flex-col w-[260px] fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0.24,1)] lg:sticky lg:h-screen lg:z-auto lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="px-4 pt-5 pb-3 flex items-center gap-2">
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-primary-hover grid place-items-center text-white">
           <BrandMark className="w-4 h-4" />
@@ -112,6 +124,7 @@ export default function Sidebar({
         </span>
       </button>
     </aside>
+    </>
   )
 }
 

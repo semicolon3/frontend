@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar'
 import {
   ArrowRightIcon,
   BellIcon,
+  MenuIcon,
   SearchIcon,
   SettingsIcon,
   SparklesIcon,
@@ -66,18 +67,29 @@ const EXAMPLES = [
 
 export default function DashboardPage() {
   const [query, setQuery] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="grid grid-cols-[260px_1fr] min-h-screen w-360 mx-auto">
-      <Sidebar active="home" />
+    <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] min-h-screen">
+      <Sidebar active="home" mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
 
       <section className="flex flex-col min-w-0 min-h-screen">
-        <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-10 shrink-0">
-          <h1 className="text-base font-semibold text-ink m-0">홈</h1>
+        <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-5 md:px-10 shrink-0">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="메뉴"
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden w-9 h-9 rounded-[10px] grid place-items-center text-ink-soft hover:bg-bg transition-colors"
+            >
+              <MenuIcon className="w-5 h-5" />
+            </button>
+            <h1 className="text-base font-semibold text-ink m-0">홈</h1>
+          </div>
           <div className="flex items-center gap-2">
             <div
               role="button"
-              className="w-80 h-10 bg-bg border border-transparent rounded-xl flex items-center gap-2 px-3.5 text-ink-mute text-[13.5px] cursor-text transition-colors hover:bg-bg-soft-2"
+              className="hidden md:flex w-64 lg:w-80 h-10 bg-bg border border-transparent rounded-xl items-center gap-2 px-3.5 text-ink-mute text-[13.5px] cursor-text transition-colors hover:bg-bg-soft-2"
             >
               <SearchIcon className="w-4 h-4" />
               <span>법령·판례 검색</span>
@@ -91,9 +103,9 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <div className="flex-1 px-10 pt-10 pb-14 max-w-[1180px] w-full mx-auto">
+        <div className="flex-1 px-5 md:px-10 pt-8 md:pt-10 pb-14 max-w-295 w-full mx-auto">
           <div className="mb-9">
-            <h1 className="text-[32px] font-bold text-ink m-0 mb-2 tracking-[-0.025em] leading-[1.25]">
+            <h1 className="text-[26px] md:text-[32px] font-bold text-ink m-0 mb-2 tracking-tight leading-tight">
               안녕하세요, 홍길동님 <span aria-hidden>👋</span>
             </h1>
             <p className="text-base text-ink-soft m-0 leading-normal">
@@ -110,7 +122,7 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-4 mb-11">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-11">
             {DOMAINS.map((d) => (
               <DomainCard key={d.key} domain={d} />
             ))}
@@ -202,7 +214,7 @@ function DomainCard({ domain }: { domain: Domain }) {
         {domain.items.map((it) => (
           <li
             key={it}
-            className="text-[13.5px] text-ink-soft flex items-center gap-2 leading-normal before:content-[''] before:w-[3px] before:h-[3px] before:rounded-full before:bg-ink-quat before:shrink-0"
+            className="text-[13.5px] text-ink-soft flex items-center gap-2 leading-normal before:content-[''] before:w-0.75 before:h-0.75 before:rounded-full before:bg-ink-quat before:shrink-0"
           >
             {it}
           </li>

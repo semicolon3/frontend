@@ -7,6 +7,7 @@ import {
   BookIcon,
   BrandMark,
   CopyIcon,
+  MenuIcon,
   MoreHorizIcon,
   ShareIcon,
   ThumbsDownIcon,
@@ -28,14 +29,23 @@ const STEPS = [
 
 export default function ChatDiagnosisPage() {
   const [input, setInput] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="grid grid-cols-[260px_1fr] w-360 mx-auto h-screen">
-      <Sidebar active="chat" activeRecent={0} />
+    <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] h-screen">
+      <Sidebar active="chat" activeRecent={0} mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
 
       <section className="flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-8 shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-5 md:px-8 shrink-0">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
+            <button
+              type="button"
+              aria-label="메뉴"
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden w-9 h-9 rounded-[10px] grid place-items-center text-ink-soft hover:bg-bg transition-colors shrink-0"
+            >
+              <MenuIcon className="w-5 h-5" />
+            </button>
             <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-semibold bg-primary-soft text-primary shrink-0">
               <span aria-hidden>🏠</span>
               <span>임대차</span>
@@ -53,11 +63,11 @@ export default function ChatDiagnosisPage() {
         </header>
 
         <div className="flex-1 overflow-y-auto bg-bg">
-          <div className="max-w-[760px] mx-auto pt-8 pb-6 flex flex-col gap-7">
+          <div className="max-w-190 mx-auto px-4 md:px-0 pt-8 pb-6 flex flex-col gap-7">
             <div>
               <div className="flex gap-3 items-start">
                 <AIAvatar />
-                <div className="bg-surface border border-line rounded-2xl rounded-tl-[4px] py-4 px-4.5 max-w-[620px] shadow-card-sm">
+                <div className="bg-surface border border-line rounded-2xl rounded-tl-sm py-4 px-4.5 max-w-155 shadow-card-sm">
                   <p className="m-0 text-ink text-[15px] leading-[1.65]">
                     안녕하세요! 어떤 상황인지 자유롭게 알려주세요.
                     <br />
@@ -65,7 +75,7 @@ export default function ChatDiagnosisPage() {
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2 mt-3 max-w-[620px] ml-11">
+              <div className="flex flex-wrap gap-2 mt-3 max-w-155 ml-11">
                 {SUGGESTION_CHIPS.map((c) => (
                   <button
                     key={c}
@@ -81,7 +91,7 @@ export default function ChatDiagnosisPage() {
             </div>
 
             <div className="flex justify-end">
-              <div className="bg-primary text-white py-3.5 px-4.5 rounded-2xl rounded-br-[4px] max-w-[520px] text-[15px] leading-[1.6] shadow-[0_1px_3px_rgba(49,130,246,0.2)]">
+              <div className="bg-primary text-white py-3.5 px-4.5 rounded-2xl rounded-br-sm max-w-130 text-[15px] leading-[1.6] shadow-[0_1px_3px_rgba(49,130,246,0.2)]">
                 전세 계약 끝났는데 집주인이 보증금 안 돌려주고 있어요. 2주 됐어요.
               </div>
             </div>
@@ -92,7 +102,7 @@ export default function ChatDiagnosisPage() {
             </div>
 
             <div className="ml-11 -mt-4">
-              <div className="flex items-start gap-1.5 py-2.5 px-3.5 bg-bg-soft-3 rounded-[10px] max-w-[700px]">
+              <div className="flex items-start gap-1.5 py-2.5 px-3.5 bg-bg-soft-3 rounded-[10px] max-w-175">
                 <span aria-hidden className="text-sm leading-normal">⚠️</span>
                 <span className="text-xs text-ink-mute leading-normal">
                   본 정보는 법률 자문이 아닙니다. 구체적 사안에 대한 판단은 변호사 상담을 권장드립니다.
@@ -109,7 +119,7 @@ export default function ChatDiagnosisPage() {
               'linear-gradient(to bottom, rgba(249,250,251,0) 0%, var(--color-bg) 30%)',
           }}
         >
-          <div className="max-w-[760px] mx-auto px-6">
+          <div className="max-w-190 mx-auto px-4 md:px-6">
             <div className="text-[12.5px] text-ink-mute mb-2 pl-1 flex items-center gap-1.5">
               <span>💡</span>
               <span>계약서나 카톡 캡처를 함께 올리면 더 정확한 답변을 받을 수 있어요</span>
@@ -170,7 +180,7 @@ function IconBtn({ label, children }: { label: string; children: ReactNode }) {
 
 function AnswerCard() {
   return (
-    <div className="bg-surface border border-line rounded-2xl rounded-tl-[4px] pt-5.5 px-6 pb-4.5 max-w-[700px] shadow-card">
+    <div className="bg-surface border border-line rounded-2xl rounded-tl-sm pt-5.5 px-4 md:px-6 pb-4.5 max-w-175 shadow-card">
       <div className="text-ink text-[15px] leading-[1.75]">
         <p className="m-0 mb-3">
           임대차 종료 후에도 집주인이 보증금을 반환하지 않는 경우, 임차인은 다음과 같이 단계적으로 대응할 수 있습니다.

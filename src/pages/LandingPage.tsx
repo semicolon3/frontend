@@ -45,7 +45,7 @@ const DOMAINS = [
 
 export default function LandingPage() {
   return (
-    <div className="bg-surface text-ink w-360 mx-auto">
+    <div className="bg-surface text-ink">
       <Header />
       <Hero />
       <DomainsSection />
@@ -58,7 +58,7 @@ export default function LandingPage() {
 
 function Header() {
   return (
-    <header className="sticky top-0 z-30 h-18 bg-surface border-b border-line flex items-center justify-between px-20">
+    <header className="sticky top-0 z-30 h-14 md:h-18 bg-surface border-b border-line flex items-center justify-between px-5 md:px-10 lg:px-20">
       <Link to="/" className="flex items-center gap-2.25">
         <span className="w-8 h-8 rounded-[9px] bg-gradient-to-br from-primary to-primary-hover grid place-items-center text-white">
           <BrandMark className="w-4.5 h-4.5" />
@@ -66,7 +66,7 @@ function Header() {
         <span className="text-[17px] font-bold text-ink tracking-[-0.025em]">Legal AI</span>
       </Link>
 
-      <nav className="flex items-center gap-1">
+      <nav className="hidden md:flex items-center gap-1">
         <HeaderLink href="#features">서비스 소개</HeaderLink>
         <HeaderLink href="#how">이용 방법</HeaderLink>
       </nav>
@@ -74,13 +74,13 @@ function Header() {
       <div className="flex items-center gap-1.5">
         <Link
           to="/login"
-          className="h-10 px-3.5 rounded-[10px] text-[14.5px] font-semibold text-ink-soft inline-flex items-center transition-colors hover:bg-bg hover:text-ink"
+          className="h-9 md:h-10 px-3 md:px-3.5 rounded-[10px] text-[13.5px] md:text-[14.5px] font-semibold text-ink-soft inline-flex items-center transition-colors hover:bg-bg hover:text-ink"
         >
           로그인
         </Link>
         <Link
           to="/dashboard"
-          className="h-10 px-4.5 rounded-[10px] bg-primary text-white text-[14.5px] font-bold inline-flex items-center justify-center gap-1.5 transition-colors hover:bg-primary-hover active:scale-[0.98] tracking-[-0.01em]"
+          className="h-9 md:h-10 px-3.5 md:px-4.5 rounded-[10px] bg-primary text-white text-[13.5px] md:text-[14.5px] font-bold inline-flex items-center justify-center gap-1.5 transition-colors hover:bg-primary-hover active:scale-[0.98] tracking-[-0.01em]"
         >
           시작하기
         </Link>
@@ -102,7 +102,7 @@ function HeaderLink({ href, children }: { href: string; children: ReactNode }) {
 
 function Hero() {
   return (
-    <section className="h-160 bg-bg px-20 grid grid-cols-[60%_40%] items-center relative overflow-hidden">
+    <section className="min-h-120 lg:h-160 bg-bg px-5 md:px-10 lg:px-20 grid grid-cols-1 lg:grid-cols-[60%_40%] items-center relative overflow-hidden py-14 lg:py-0">
       <div
         aria-hidden
         className="absolute -top-30 -right-20 w-120 h-120 pointer-events-none"
@@ -112,16 +112,16 @@ function Hero() {
         }}
       />
 
-      <div className="relative z-10 pr-10">
-        <span className="inline-flex items-center gap-1.5 bg-primary-soft text-primary text-[13px] font-semibold py-1.5 px-3 rounded-full mb-6 tracking-[-0.01em]">
+      <div className="relative z-10 lg:pr-10">
+        <span className="inline-flex items-center gap-1.5 bg-primary-soft text-primary text-[13px] font-semibold py-1.5 px-3 rounded-full mb-5 md:mb-6 tracking-[-0.01em]">
           🇰🇷 한국 법률 특화 AI
         </span>
-        <h1 className="text-[56px] font-extrabold leading-[1.18] text-ink m-0 mb-5 tracking-[-0.035em]">
+        <h1 className="text-[36px] sm:text-[46px] lg:text-[56px] font-extrabold leading-[1.18] text-ink m-0 mb-4 md:mb-5 tracking-[-0.035em]">
           변호사를 부르기 전,
           <br />
           <span className="text-primary">먼저 물어보세요</span>
         </h1>
-        <p className="text-xl leading-normal text-ink-soft m-0 mb-9 font-medium">
+        <p className="text-base md:text-xl leading-normal text-ink-soft m-0 mb-7 md:mb-9 font-medium">
           AI가 한국 법령과 판례를 검색해
           <br />
           본인 상황에 맞는 답을 드립니다
@@ -129,7 +129,7 @@ function Hero() {
         <div className="flex flex-col gap-3 items-start">
           <Link
             to="/chat"
-            className="h-14 px-7 rounded-[14px] bg-primary text-white text-base font-bold inline-flex items-center justify-center gap-1.5 transition-[background,box-shadow,transform] hover:bg-primary-hover hover:shadow-[0_6px_20px_rgba(49,130,246,0.34)] active:scale-[0.98] tracking-[-0.01em] shadow-[0_4px_14px_rgba(49,130,246,0.28)]"
+            className="h-12 md:h-14 px-6 md:px-7 rounded-[14px] bg-primary text-white text-sm md:text-base font-bold inline-flex items-center justify-center gap-1.5 transition-[background,box-shadow,transform] hover:bg-primary-hover hover:shadow-[0_6px_20px_rgba(49,130,246,0.34)] active:scale-[0.98] tracking-[-0.01em] shadow-[0_4px_14px_rgba(49,130,246,0.28)]"
           >
             무료로 진단 시작
             <ArrowRightIcon className="w-4.5 h-4.5" />
@@ -138,7 +138,9 @@ function Hero() {
         </div>
       </div>
 
-      <HeroMockup />
+      <div className="hidden lg:block">
+        <HeroMockup />
+      </div>
     </section>
   )
 }
@@ -263,23 +265,23 @@ function FloatCard({
 
 function SecHead({ title, sub }: { title: string; sub: string }) {
   return (
-    <div className="text-center mb-14">
-      <h2 className="text-[40px] font-extrabold text-ink tracking-[-0.03em] m-0 mb-3.5 leading-[1.25]">
+    <div className="text-center mb-10 md:mb-14">
+      <h2 className="text-[28px] md:text-[34px] lg:text-[40px] font-extrabold text-ink tracking-[-0.03em] m-0 mb-3 md:mb-3.5 leading-tight">
         {title}
       </h2>
-      <p className="text-lg text-ink-soft m-0 leading-normal font-medium">{sub}</p>
+      <p className="text-base md:text-lg text-ink-soft m-0 leading-normal font-medium">{sub}</p>
     </div>
   )
 }
 
 function DomainsSection() {
   return (
-    <section id="features" className="py-30 px-20">
+    <section id="features" className="py-16 md:py-24 lg:py-30 px-5 md:px-10 lg:px-20">
       <SecHead
         title="어떤 분쟁이든 도와드려요"
         sub="4대 핵심 분야에서 변호사 1차 상담 수준의 정보를 제공합니다"
       />
-      <div className="grid grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {DOMAINS.map((d) => (
           <div
             key={d.key}
@@ -312,9 +314,9 @@ function DomainsSection() {
 
 function StepsSection() {
   return (
-    <section id="how" className="py-30 px-20 bg-bg">
+    <section id="how" className="py-16 md:py-24 lg:py-30 px-5 md:px-10 lg:px-20 bg-bg">
       <SecHead title="어떻게 사용하나요?" sub="3단계로 끝나는 가장 빠른 법률 진단" />
-      <div className="grid grid-cols-[1fr_60px_1fr_60px_1fr] items-start max-w-[1100px] mx-auto">
+      <div className="flex flex-col items-center gap-8 md:grid md:grid-cols-[1fr_60px_1fr_60px_1fr] md:items-start max-w-275 mx-auto">
         <Step num={1} glyph="💬" title="질문하기" desc={<>분쟁 상황을 자유롭게<br />설명해 주세요</>} />
         <StepArrow />
         <Step num={2} glyph="🤖" title="AI 진단" desc={<>법령과 판례를 근거로<br />답변드려요</>} />
@@ -352,7 +354,7 @@ function Step({
 
 function StepArrow() {
   return (
-    <div className="pt-6 grid place-items-center text-ink-quat" aria-hidden>
+    <div className="hidden md:grid pt-6 place-items-center text-ink-quat" aria-hidden>
       <ArrowRightIcon className="w-10 h-5" />
     </div>
   )
@@ -360,12 +362,12 @@ function StepArrow() {
 
 function DiffSection() {
   return (
-    <section className="py-30 px-20">
+    <section className="py-16 md:py-24 lg:py-30 px-5 md:px-10 lg:px-20">
       <SecHead
         title="ChatGPT와는 다릅니다"
         sub="범용 AI로는 불가능한, 한국 법률에 진짜 특화된 답변"
       />
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <DiffCard
           highlight
           glyph="📎"
@@ -458,8 +460,8 @@ function DocThumb({ children }: { children: ReactNode }) {
 
 function Footer() {
   return (
-    <footer className="border-t border-line py-8 px-20 bg-surface grid grid-cols-3 items-center gap-6">
-      <div className="flex items-center gap-2.5 text-[13px] text-ink-mute">
+    <footer className="border-t border-line py-8 px-5 md:px-10 lg:px-20 bg-surface grid grid-cols-1 md:grid-cols-3 items-center gap-4 md:gap-6">
+      <div className="flex items-center justify-center md:justify-start gap-2.5 text-[13px] text-ink-mute">
         <span className="w-6 h-6 rounded-[7px] bg-gradient-to-br from-primary to-primary-hover grid place-items-center text-white">
           <BrandMark className="w-3.5 h-3.5" />
         </span>
@@ -468,7 +470,7 @@ function Footer() {
       <div className="text-center text-[12.5px] text-ink-mute leading-normal">
         본 서비스는 법률 정보 제공이며 법률 자문이 아닙니다
       </div>
-      <div className="flex items-center justify-end gap-1.5 text-[13px] text-ink-soft">
+      <div className="flex items-center justify-center md:justify-end gap-1.5 text-[13px] text-ink-soft">
         <FooterLink>이용약관</FooterLink>
         <span className="text-ink-quat select-none">·</span>
         <FooterLink>개인정보 처리방침</FooterLink>

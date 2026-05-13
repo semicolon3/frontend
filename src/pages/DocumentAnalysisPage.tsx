@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import Sidebar, { type Recent } from '../components/Sidebar'
 import {
+  MenuIcon,
   AlertIcon,
   AlertTriangleIcon,
   BookIcon,
@@ -27,6 +28,7 @@ const RECENTS: Recent[] = [
 export default function DocumentAnalysisPage() {
   const [openClauses, setOpenClauses] = useState<boolean[]>([true, false, false])
   const [panelOpen, setPanelOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setPanelOpen(true), 300)
@@ -38,18 +40,28 @@ export default function DocumentAnalysisPage() {
 
   return (
     <>
-      <div className="grid grid-cols-[260px_1fr] min-h-screen w-360 mx-auto relative overflow-x-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] min-h-screen">
         <Sidebar
           active="docs"
           activeRecent={0}
           recents={RECENTS}
           recentsLabel="최근 분석"
+          mobileOpen={sidebarOpen}
+          onMobileClose={() => setSidebarOpen(false)}
         />
 
         <section className="flex flex-col min-w-0 min-h-screen">
-          <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-10 shrink-0">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="text-[13px] text-ink-mute">
+          <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-5 md:px-10 shrink-0">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+              <button
+                type="button"
+                aria-label="메뉴"
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden w-9 h-9 rounded-[10px] grid place-items-center text-ink-soft hover:bg-bg transition-colors shrink-0"
+              >
+                <MenuIcon className="w-5 h-5" />
+              </button>
+              <span className="hidden sm:inline text-[13px] text-ink-mute">
                 <a href="#" className="hover:text-ink-soft">홈</a>
                 <span className="mx-1.5 text-ink-quat">›</span>
                 <span>내 문서</span>
@@ -69,9 +81,9 @@ export default function DocumentAnalysisPage() {
             </div>
           </header>
 
-          <div className="flex-1 px-10 pt-8 pb-14 w-full">
+          <div className="flex-1 px-5 md:px-10 pt-6 md:pt-8 pb-14 w-full">
             <div className="mb-6">
-              <h1 className="text-[28px] font-bold text-ink m-0 mb-1.5 tracking-[-0.025em]">
+              <h1 className="text-[24px] md:text-[28px] font-bold text-ink m-0 mb-1.5 tracking-tight">
                 문서 분석
               </h1>
               <p className="text-[15px] text-ink-soft m-0">
@@ -79,7 +91,7 @@ export default function DocumentAnalysisPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
               <div>
                 <UploadBox />
                 <DocPreview />
@@ -207,7 +219,7 @@ function ZoomBtn({ label, children }: { label: string; children: ReactNode }) {
 
 function A4Doc() {
   return (
-    <div className="w-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08),0_8px_24px_rgba(0,0,0,0.06)] rounded text-[10.5px] leading-[1.85] text-[#1d242c] tracking-[-0.005em] py-9 px-10 [aspect-ratio:210/297]">
+    <div className="w-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08),0_8px_24px_rgba(0,0,0,0.06)] rounded text-[10.5px] leading-[1.85] text-[#1d242c] tracking-[-0.005em] py-9 px-10 aspect-210/297">
       <h4 className="text-center text-base font-extrabold tracking-[0.3em] m-0 mb-1 text-[#111]">
         주택임대차계약서
       </h4>
@@ -243,7 +255,7 @@ function A4Doc() {
       <Clause
         title={<><Pin tone="red">!</Pin>제5조 (보증금 반환)</>}
         body={
-          <span className="bg-[#fee2e2] shadow-[inset_0_-1px_0_#fca5a5] py-px px-0.5 rounded-sm">
+          <span className="bg-risk-high-bg shadow-[inset_0_-1px_0_#fca5a5] py-px px-0.5 rounded-sm">
             보증금 반환 시기는 임대인이 임의로 결정한다. 임차인은 이에 이의를 제기할 수 없다.
           </span>
         }
@@ -260,7 +272,7 @@ function A4Doc() {
       <Clause
         title={<><Pin tone="yellow">!</Pin>제8조 (원상복구)</>}
         body={
-          <span className="bg-[#fef3c7] shadow-[inset_0_-1px_0_#fcd34d] py-px px-0.5 rounded-sm">
+          <span className="bg-risk-mid-bg shadow-[inset_0_-1px_0_#fcd34d] py-px px-0.5 rounded-sm">
             계약 종료 시 임차인은 일체의 원상복구 비용을 부담하며, 그 범위는 임대인이 정한다.
           </span>
         }
@@ -290,7 +302,7 @@ function Pin({ tone, children }: { tone: 'red' | 'yellow'; children: ReactNode }
   const bg = tone === 'red' ? 'bg-danger' : 'bg-risk-mid'
   return (
     <span
-      className={`inline-block w-3.5 h-3.5 rounded-full text-white text-[9px] font-bold text-center leading-[14px] mr-1 -translate-y-px ${bg}`}
+      className={`inline-block w-3.5 h-3.5 rounded-full text-white text-[9px] font-bold text-center leading-3.5 mr-1 -translate-y-px ${bg}`}
     >
       {children}
     </span>
@@ -299,7 +311,7 @@ function Pin({ tone, children }: { tone: 'red' | 'yellow'; children: ReactNode }
 
 function SummaryCard() {
   return (
-    <div className="bg-gradient-to-br from-primary-lighter to-primary-soft border border-[#d7e8ff] rounded-2xl p-5 mb-4">
+    <div className="bg-linear-to-br from-primary-lighter to-primary-soft border border-[#d7e8ff] rounded-2xl p-5 mb-4">
       <div className="flex items-center gap-2 mb-2.5">
         <h3 className="text-base font-bold text-ink m-0 tracking-[-0.015em]">분석 요약</h3>
         <span className="ml-auto inline-flex items-center gap-1 bg-primary/10 text-primary text-[11px] font-semibold py-0.5 px-2 rounded-full">
@@ -580,8 +592,7 @@ function SlidePanel({ open, onClose }: { open: boolean; onClose: () => void }) {
       />
       <aside
         aria-hidden={!open}
-        style={{ right: 'max(0px, calc(50vw - 720px))' }}
-        className={`fixed top-0 w-120 h-screen bg-surface shadow-panel z-50 flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0.24,1)] ${
+        className={`fixed top-0 right-0 w-full sm:w-120 h-screen bg-surface shadow-panel z-50 flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0.24,1)] ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -609,7 +620,7 @@ function SlidePanel({ open, onClose }: { open: boolean; onClose: () => void }) {
             <span className="text-primary shrink-0 mt-px">
               <SparklesIcon className="w-3.5 h-3.5" />
             </span>
-            <div className="text-[12.5px] text-[#1b3f7a] leading-[1.5]">
+            <div className="text-[12.5px] text-[#1b3f7a] leading-normal">
               <strong className="font-bold">AI가 계약서를 분석해 자동 채웠어요.</strong> 내용을 확인하고 필요한 부분만 수정해주세요.
             </div>
           </div>
@@ -633,7 +644,7 @@ function SlidePanel({ open, onClose }: { open: boolean; onClose: () => void }) {
 
           <FormRow label="청구 사유" aiTag="AI 작성">
             <textarea
-              className="w-full border border-line rounded-[10px] py-2.5 px-3 text-[13.5px] text-ink bg-surface transition-all leading-[1.5] outline-none min-h-28 resize-y focus:border-primary focus:ring-[3px] focus:ring-primary/12"
+              className="w-full border border-line rounded-[10px] py-2.5 px-3 text-[13.5px] text-ink bg-surface transition-all leading-normal outline-none min-h-28 resize-y focus:border-primary focus:ring-[3px] focus:ring-primary/12"
               defaultValue="본인은 귀하와 2024년 3월 1일에 임대차계약을 체결하고, 보증금 5천만원을 지급하였습니다. 계약기간 만료일인 2026년 2월 28일까지 계약상 의무를 성실히 이행하였음에도 귀하께서 보증금 반환을 지연하고 계신바, 본 내용증명 도달로부터 7일 이내에 보증금 5천만원 전액을 반환해 주실 것을 요청드립니다."
             />
             <div className="text-[11.5px] text-ink-mute mt-1">
@@ -706,7 +717,7 @@ function PanelInput({
     <input
       type="text"
       defaultValue={defaultValue}
-      className={`w-full border border-line rounded-[10px] py-2.5 px-3 text-[13.5px] bg-surface transition-all leading-[1.5] outline-none focus:border-primary focus:ring-[3px] focus:ring-primary/12 ${
+      className={`w-full border border-line rounded-[10px] py-2.5 px-3 text-[13.5px] bg-surface transition-all leading-normal outline-none focus:border-primary focus:ring-[3px] focus:ring-primary/12 ${
         amount ? 'tabular-nums font-bold text-primary' : 'text-ink'
       }`}
     />
@@ -715,7 +726,7 @@ function PanelInput({
 
 function CertDoc() {
   return (
-    <div className="bg-white border border-line rounded-md shadow-[0_2px_8px_rgba(0,0,0,0.06)] [aspect-ratio:210/297] py-6 px-6.5 font-['Nanum_Myeongjo',serif] text-[#111] text-[9px] leading-[1.7] overflow-hidden relative">
+    <div className="bg-white border border-line rounded-md shadow-[0_2px_8px_rgba(0,0,0,0.06)] aspect-210/297 py-6 px-6.5 font-['Nanum_Myeongjo',serif] text-[#111] text-[9px] leading-[1.7] overflow-hidden relative">
       <h3 className="text-center m-0 mb-1 text-lg font-extrabold tracking-[0.5em] pl-2 text-[#111]">
         내 용 증 명
       </h3>
@@ -756,7 +767,7 @@ function CertDoc() {
         2026. 3. 2.
         <br />
         발신인 홍 길 동
-        <span className="inline-block w-7 h-7 border-[1.5px] border-danger rounded-full text-danger text-center leading-[26px] text-[9px] font-extrabold ml-1 -rotate-[8deg]">
+        <span className="inline-block w-7 h-7 border-[1.5px] border-danger rounded-full text-danger text-center leading-6.5 text-[9px] font-extrabold ml-1 rotate-[-8deg]">
           印
         </span>
       </div>
