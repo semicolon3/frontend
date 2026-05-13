@@ -1,7 +1,16 @@
+const DEFAULT_API_BASE_URL = 'https://port-0-legal-ai-mp2pi1ad2d46dc8d.sel3.cloudtype.app'
 const IS_DEV = import.meta.env.DEV
-export const BASE_URL = IS_DEV
-  ? ''
-  : 'https://port-0-legal-ai-mp2pi1ad2d46dc8d.sel3.cloudtype.app'
+
+function normalizeBaseUrl(value: string | undefined): string | undefined {
+  const trimmed = value?.trim()
+  if (!trimmed) return undefined
+
+  return trimmed.replace(/\/+$/, '')
+}
+
+export const BASE_URL =
+  normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL) ??
+  (IS_DEV ? '' : DEFAULT_API_BASE_URL)
 
 export function getAccessToken(): string | null {
   return localStorage.getItem('accessToken')
