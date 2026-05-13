@@ -1,5 +1,7 @@
-import { useRef, useState, type ReactNode } from 'react'
-import Sidebar from '../components/Sidebar'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Sidebar, { type Recent } from '../components/Sidebar'
+import { fetchConversations, createConversation } from '../api/conversations'
 import {
   ArrowRightIcon,
   BellIcon,
@@ -18,6 +20,18 @@ type Domain = {
   dotClass: string
   iconBgClass: string
   hoverTextClass: string
+}
+
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 1) return '방금'
+  if (m < 60) return `${m}분 전`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}시간 전`
+  const d = Math.floor(h / 24)
+  if (d < 7) return `${d}일 전`
+  return `${Math.floor(d / 7)}주 전`
 }
 
 const DOMAINS: Domain[] = [
@@ -66,9 +80,35 @@ const EXAMPLES = [
   '계약서를 검토하고 싶어요',
 ]
 
+const DOMAIN_MAP: Record<string, string> = {
+  rent: 'LEASE',
+  work: 'WORK',
+  consumer: 'CONSUMER',
+  traffic: 'TRAFFIC',
+}
+
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [recents, setRecents] = useState<Recent[]>([])
+
+  const handleNewChat = async (domainKey?: string) => {
+    try {
+      const conv = await createConversation(DOMAIN_MAP[domainKey ?? ''] ?? 'LEASE')
+      navigate(`/chat?id=${conv.id}`)
+    } catch {
+      navigate('/chat')
+    }
+  }
+
+  useEffect(() => {
+    fetchConversations()
+      .then(({ content }) =>
+        setRecents(content.map((c) => ({ id: c.id, title: c.title, meta: c.updatedAt ? formatRelative(c.updatedAt) : '' })))
+      )
+      .catch(() => {})
+  }, [])
   const [searchInput, setSearchInput] = useState('')
   const [searchResult, setSearchResult] = useState<string | null>(null)
   const [searchLoading, setSearchLoading] = useState(false)
@@ -110,7 +150,7 @@ export default function DashboardPage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] min-h-screen">
-      <Sidebar active="home" mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
+      <Sidebar active="home" recents={recents} mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} onNewChat={() => handleNewChat()} />
 
       <section className="flex flex-col min-w-0 min-h-screen">
         <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-5 md:px-10 shrink-0">
@@ -222,7 +262,7 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-11">
             {DOMAINS.map((d) => (
-              <DomainCard key={d.key} domain={d} />
+              <DomainCard key={d.key} domain={d} onStart={() => handleNewChat(d.key)} />
             ))}
           </div>
 
@@ -288,10 +328,11 @@ function IconBtn({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function DomainCard({ domain }: { domain: Domain }) {
+function DomainCard({ domain, onStart }: { domain: Domain; onStart: () => void }) {
   return (
     <button
       type="button"
+      onClick={onStart}
       className="group bg-surface border border-line rounded-2xl p-6 cursor-pointer text-left w-full flex flex-col gap-4 relative transition-[transform,box-shadow,border-color] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:-translate-y-1 hover:shadow-card-hover hover:border-transparent"
     >
       <div
