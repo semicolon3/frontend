@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { createConversation } from '../api/conversations'
 import {
   BrandMark,
   ChatBubbleIcon,
@@ -27,6 +29,7 @@ export default function Sidebar({
   mobileOpen = false,
   onMobileClose,
   onRecentClick,
+  onNewChat,
 }: {
   active?: SidebarKey
   activeRecent?: number
@@ -35,7 +38,24 @@ export default function Sidebar({
   mobileOpen?: boolean
   onMobileClose?: () => void
   onRecentClick?: (id: number) => void
+  onNewChat?: () => void
 }) {
+  const navigate = useNavigate()
+  const [starting, setStarting] = useState(false)
+
+  const handleNewChat = async () => {
+    if (onNewChat) { onNewChat(); return }
+    setStarting(true)
+    try {
+      const conv = await createConversation('LEASE')
+      navigate(`/chat?id=${conv.id}`)
+    } catch {
+      navigate('/chat')
+    } finally {
+      setStarting(false)
+    }
+  }
+
   return (
     <>
       <div
@@ -55,6 +75,8 @@ export default function Sidebar({
 
       <button
         type="button"
+        onClick={handleNewChat}
+        disabled={starting}
         className="mx-4 mt-1 mb-4 h-11 rounded-xl bg-primary text-white text-sm font-semibold flex items-center justify-center gap-1.5 hover:bg-primary-hover transition-colors"
       >
         <PlusIcon className="w-4 h-4" />

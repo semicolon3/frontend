@@ -1,17 +1,15 @@
-import { useState, type ReactNode } from 'react'
-import Sidebar from '../components/Sidebar'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import Sidebar, { type Recent } from '../components/Sidebar'
+import { fetchConversations, fetchConversationById, sendMessage, deleteConversation, updateConversation, type Message, type Conversation } from '../api/conversations'
 import {
-  ArrowRightIcon,
   ArrowUpIcon,
   AttachIcon,
   BookIcon,
   BrandMark,
-  CopyIcon,
   MenuIcon,
   MoreHorizIcon,
   ShareIcon,
-  ThumbsDownIcon,
-  ThumbsUpIcon,
 } from '../components/icons'
 
 const SUGGESTION_CHIPS = [
@@ -21,19 +19,128 @@ const SUGGESTION_CHIPS = [
   '묵시적 갱신이 뭔가요?',
 ]
 
-const STEPS = [
-  <><strong className="font-bold">내용증명 발송</strong>으로 공식적으로 반환을 요구합니다.</>,
-  <><strong className="font-bold">임차권등기명령</strong>을 신청해 대항력·우선변제권을 유지합니다. (3개월 무효 방지)</>,
-  <>합의가 어려우면 <strong className="font-bold">민사조정</strong> 또는 소액사건을 진행합니다.</>,
-]
+const DOMAIN_LABELS: Record<string, { emoji: string; label: string }> = {
+  LEASE: { emoji: '🏠', label: '임대차' },
+  WORK: { emoji: '💼', label: '근로' },
+  CONSUMER: { emoji: '🛍️', label: '소비자' },
+  TRAFFIC: { emoji: '🚗', label: '교통' },
+}
+
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 1) return '방금'
+  if (m < 60) return `${m}분 전`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}시간 전`
+  const d = Math.floor(h / 24)
+  if (d < 7) return `${d}일 전`
+  return `${Math.floor(d / 7)}주 전`
+}
 
 export default function ChatDiagnosisPage() {
   const [input, setInput] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [recents, setRecents] = useState<Recent[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
+  const [loadingMessages, setLoadingMessages] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [renaming, setRenaming] = useState(false)
+  const [titleInput, setTitleInput] = useState('')
+  const [conversation, setConversation] = useState<Conversation | null>(null)
+  const [searchParams] = useSearchParams()
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+
+  const conversationId = searchParams.get('id') ? Number(searchParams.get('id')) : null
+
+  useEffect(() => {
+    fetchConversations()
+      .then(({ content }) =>
+        setRecents(content.map((c) => ({ id: c.id, title: c.title, meta: formatRelative(c.updatedAt) })))
+      )
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (conversationId == null) { setMessages([]); setConversation(null); return }
+    setLoadingMessages(true)
+    fetchConversationById(conversationId)
+      .then((detail) => {
+        setConversation(detail)
+        setMessages(detail.messages)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMessages(false))
+  }, [conversationId])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const handleSend = async () => {
+    if (!input.trim() || conversationId == null || sending) return
+    const text = input.trim()
+    setInput('')
+    setMessages((prev) => [...prev, { id: Date.now(), role: 'USER', content: text, citations: [], createdAt: new Date().toISOString() }])
+    setSending(true)
+    try {
+      const reply = await sendMessage(conversationId, text)
+      setMessages((prev) => [...prev, reply])
+    } catch {
+      // keep the user message visible but don't crash
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleRenameStart = () => {
+    setTitleInput(conversation?.title ?? '')
+    setMenuOpen(false)
+    setRenaming(true)
+  }
+
+  const handleRenameCommit = async () => {
+    setRenaming(false)
+    if (!titleInput.trim() || conversationId == null) return
+    try {
+      const updated = await updateConversation(conversationId, { title: titleInput.trim() })
+      setConversation(updated)
+    } catch {
+      // 실패 시 기존 제목 유지
+    }
+  }
+
+  const handleArchive = async () => {
+    if (conversationId == null) return
+    setMenuOpen(false)
+    try {
+      await updateConversation(conversationId, { archived: true })
+      navigate('/dashboard')
+    } catch {
+      // 실패 시 현재 페이지 유지
+    }
+  }
+
+  const handleDelete = async () => {
+    if (conversationId == null) return
+    setMenuOpen(false)
+    try {
+      await deleteConversation(conversationId)
+      navigate('/dashboard')
+    } catch {
+      // 실패 시 현재 페이지 유지
+    }
+  }
+
+  const domain = conversation
+    ? (DOMAIN_LABELS[conversation.domain] ?? { emoji: '⚖️', label: conversation.domain })
+    : null
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] h-screen">
-      <Sidebar active="chat" activeRecent={0} mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
+      <Sidebar active="chat" recents={recents} mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
 
       <section className="flex flex-col min-w-0 h-screen overflow-hidden">
         <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-5 md:px-8 shrink-0">
@@ -46,25 +153,75 @@ export default function ChatDiagnosisPage() {
             >
               <MenuIcon className="w-5 h-5" />
             </button>
-            <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-semibold bg-primary-soft text-primary shrink-0">
-              <span aria-hidden>🏠</span>
-              <span>임대차</span>
-            </span>
-            <h1 className="text-base font-semibold text-ink truncate">보증금 미반환 분쟁</h1>
+            {domain && (
+              <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-semibold bg-primary-soft text-primary shrink-0">
+                <span aria-hidden>{domain.emoji}</span>
+                <span>{domain.label}</span>
+              </span>
+            )}
+            {renaming ? (
+              <input
+                autoFocus
+                value={titleInput}
+                onChange={(e) => setTitleInput(e.target.value)}
+                onBlur={handleRenameCommit}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleRenameCommit(); if (e.key === 'Escape') setRenaming(false) }}
+                className="text-base font-semibold text-ink bg-bg border border-primary rounded-lg px-2 py-0.5 outline-none min-w-0 w-48"
+              />
+            ) : (
+              <h1 className="text-base font-semibold text-ink truncate">
+                {conversation?.title ?? '새 대화'}
+              </h1>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <IconBtn label="공유">
               <ShareIcon className="w-4.5 h-4.5" />
             </IconBtn>
-            <IconBtn label="더보기">
-              <MoreHorizIcon className="w-4.5 h-4.5" />
-            </IconBtn>
+            <div className="relative">
+              <IconBtn label="더보기" onClick={() => setMenuOpen((v) => !v)}>
+                <MoreHorizIcon className="w-4.5 h-4.5" />
+              </IconBtn>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} aria-hidden />
+                  <div className="absolute right-0 top-full mt-1 w-36 bg-surface border border-line rounded-xl shadow-popover z-20 py-1 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={handleRenameStart}
+                      className="w-full text-left px-3.5 py-2.5 text-[13.5px] text-ink-soft hover:bg-bg transition-colors"
+                    >
+                      제목 변경
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleArchive}
+                      className="w-full text-left px-3.5 py-2.5 text-[13.5px] text-ink-soft hover:bg-bg transition-colors"
+                    >
+                      보관
+                    </button>
+                    <div className="h-px bg-line mx-2 my-1" />
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="w-full text-left px-3.5 py-2.5 text-[13.5px] text-danger hover:bg-bg transition-colors"
+                    >
+                      대화 삭제
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 
         <div className="flex-1 overflow-y-auto bg-bg">
-          <div className="max-w-190 mx-auto px-4 md:px-0 pt-8 pb-6 flex flex-col gap-7">
-            <div>
+          {loadingMessages ? (
+            <div className="flex items-center justify-center h-full">
+              <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="max-w-190 mx-auto px-4 md:px-0 pt-8 pb-6">
               <div className="flex gap-3 items-start">
                 <AIAvatar />
                 <div className="bg-surface border border-line rounded-2xl rounded-tl-sm py-4 px-4.5 max-w-155 shadow-card-sm">
@@ -89,35 +246,59 @@ export default function ChatDiagnosisPage() {
                 ))}
               </div>
             </div>
-
-            <div className="flex justify-end">
-              <div className="bg-primary text-white py-3.5 px-4.5 rounded-2xl rounded-br-sm max-w-130 text-[15px] leading-[1.6] shadow-[0_1px_3px_rgba(49,130,246,0.2)]">
-                전세 계약 끝났는데 집주인이 보증금 안 돌려주고 있어요. 2주 됐어요.
+          ) : (
+            <div className="max-w-190 mx-auto px-4 md:px-0 pt-8 pb-6 flex flex-col gap-4">
+              {messages.map((msg) =>
+                msg.role === 'USER' ? (
+                  <div key={msg.id} className="flex justify-end">
+                    <div className="bg-primary text-white py-3.5 px-4.5 rounded-2xl rounded-br-sm max-w-130 text-[15px] leading-[1.6] shadow-[0_1px_3px_rgba(49,130,246,0.2)]">
+                      {msg.content}
+                    </div>
+                  </div>
+                ) : (
+                  <div key={msg.id} className="flex gap-3 items-start">
+                    <AIAvatar />
+                    <div className="bg-surface border border-line rounded-2xl rounded-tl-sm py-4 px-4.5 max-w-175 shadow-card-sm">
+                      <p className="m-0 text-ink text-[15px] leading-[1.75] whitespace-pre-wrap">{msg.content}</p>
+                      {msg.citations.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-line">
+                          {msg.citations.map((c, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[12.5px] font-semibold bg-primary-soft text-primary"
+                            >
+                              <BookIcon className="w-2.75 h-2.75" />
+                              {c.lawName} {c.article}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+          {sending && (
+            <div className="max-w-190 mx-auto px-4 md:px-0 pb-4">
+              <div className="flex gap-3 items-start">
+                <AIAvatar />
+                <div className="bg-surface border border-line rounded-2xl rounded-tl-sm py-4 px-4.5 shadow-card-sm">
+                  <div className="flex gap-1 items-center h-5">
+                    <span className="w-2 h-2 bg-ink-mute rounded-full animate-bounce [animation-delay:0ms]" />
+                    <span className="w-2 h-2 bg-ink-mute rounded-full animate-bounce [animation-delay:150ms]" />
+                    <span className="w-2 h-2 bg-ink-mute rounded-full animate-bounce [animation-delay:300ms]" />
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className="flex gap-3 items-start">
-              <AIAvatar />
-              <AnswerCard />
-            </div>
-
-            <div className="ml-11 -mt-4">
-              <div className="flex items-start gap-1.5 py-2.5 px-3.5 bg-bg-soft-3 rounded-[10px] max-w-175">
-                <span aria-hidden className="text-sm leading-normal">⚠️</span>
-                <span className="text-xs text-ink-mute leading-normal">
-                  본 정보는 법률 자문이 아닙니다. 구체적 사안에 대한 판단은 변호사 상담을 권장드립니다.
-                </span>
-              </div>
-            </div>
-          </div>
+          )}
+          <div ref={bottomRef} />
         </div>
 
         <div
           className="shrink-0 pt-2 pb-5"
-          style={{
-            background:
-              'linear-gradient(to bottom, rgba(249,250,251,0) 0%, var(--color-bg) 30%)',
-          }}
+          style={{ background: 'linear-gradient(to bottom, rgba(249,250,251,0) 0%, var(--color-bg) 30%)' }}
         >
           <div className="max-w-190 mx-auto px-4 md:px-6">
             <div className="text-[12.5px] text-ink-mute mb-2 pl-1 flex items-center gap-1.5">
@@ -136,13 +317,16 @@ export default function ChatDiagnosisPage() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) handleSend() }}
                 placeholder="메시지를 입력하세요…"
-                className="flex-1 outline-none h-full text-[15px] text-ink placeholder:text-ink-mute px-3 bg-transparent"
+                disabled={sending}
+                className="flex-1 outline-none h-full text-[15px] text-ink placeholder:text-ink-mute px-3 bg-transparent disabled:opacity-60"
               />
               <button
                 type="button"
                 aria-label="전송"
-                disabled={!input.trim()}
+                onClick={handleSend}
+                disabled={!input.trim() || sending || conversationId == null}
                 className="w-10 h-10 rounded-xl bg-primary text-white grid place-items-center shrink-0 transition-colors hover:bg-primary-hover disabled:bg-line-strong disabled:cursor-not-allowed"
               >
                 <ArrowUpIcon className="w-4.5 h-4.5" />
@@ -166,273 +350,13 @@ function AIAvatar() {
   )
 }
 
-function IconBtn({ label, children }: { label: string; children: ReactNode }) {
+function IconBtn({ label, onClick, children }: { label: string; onClick?: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       aria-label={label}
-      className="w-9 h-9 rounded-[10px] grid place-items-center text-ink-soft transition-colors hover:bg-bg"
-    >
-      {children}
-    </button>
-  )
-}
-
-function AnswerCard() {
-  return (
-    <div className="bg-surface border border-line rounded-2xl rounded-tl-sm pt-5.5 px-4 md:px-6 pb-4.5 max-w-175 shadow-card">
-      <div className="text-ink text-[15px] leading-[1.75]">
-        <p className="m-0 mb-3">
-          임대차 종료 후에도 집주인이 보증금을 반환하지 않는 경우, 임차인은 다음과 같이 단계적으로 대응할 수 있습니다.
-        </p>
-
-        <ol className="my-1.5 mb-3.5 p-0 list-none flex flex-col gap-2">
-          {STEPS.map((step, i) => (
-            <li key={i} className="relative pl-8 leading-[1.65]">
-              <span className="absolute left-0 top-0.5 w-5.5 h-5.5 bg-primary-soft text-primary rounded-full grid place-items-center text-xs font-bold">
-                {i + 1}
-              </span>
-              {step}
-            </li>
-          ))}
-        </ol>
-
-        <p className="m-0 mb-3">
-          <Cite type="law">
-            <BookIcon className="w-2.75 h-2.75" />
-            주택임대차보호법 제3조의2
-          </Cite>
-          에 따르면, 임차인이 보증금 반환을 받지 못한 경우 법원에{' '}
-          <strong className="font-bold">임차권등기명령</strong>을 신청할 수 있으며, 이로써 이사 후에도 대항력과 우선변제권이 유지됩니다.
-        </p>
-
-        <p className="m-0">
-          또한{' '}
-          <Cite type="case">
-            <BrandMark className="w-2.75 h-2.75" />
-            대법원 2021다12345
-          </Cite>{' '}
-          판결은 보증금 반환 지연에 따른 <strong className="font-bold">지연이자(연 5%)</strong>를 인정한 사례입니다. 내용증명 발송 시점부터 청구 가능합니다.
-        </p>
-      </div>
-
-      <SourcesBox />
-      <ActionsBox />
-      <FeedbackRow />
-    </div>
-  )
-}
-
-function Cite({ type, children }: { type: 'law' | 'case'; children: ReactNode }) {
-  const cls =
-    type === 'law'
-      ? 'bg-primary-soft text-primary'
-      : 'bg-bg-soft-2 text-ink-soft'
-  return (
-    <button
-      type="button"
-      className={`inline-flex items-center gap-1 py-0.5 px-2 rounded-md text-[13px] font-semibold leading-[1.4] align-baseline cursor-pointer transition-opacity hover:opacity-80 mx-px ${cls}`}
-    >
-      {children}
-    </button>
-  )
-}
-
-function SourcesBox() {
-  return (
-    <div className="mt-4.5 p-4.5 bg-bg-soft-3 rounded-xl">
-      <p className="text-[13px] font-bold text-ink m-0 mb-3 flex items-center gap-1.5">
-        <span>📚</span> 참고한 법령 · 판례
-      </p>
-      <SourceCard
-        tag="law"
-        title="주택임대차보호법 제3조의2 (보증금의 회수)"
-        excerpt='"임차인은 임차주택에 대한 보증금반환청구소송의 확정 판결 또는 이에 준하는 집행권원에 기한 경매를 신청하는 경우 반대의무의 이행이나 이행의 제공을 집행개시의 요건으로 하지 아니한다…"'
-      />
-      <SourceCard
-        tag="case"
-        title="대법원 2021다12345 판결"
-        excerpt='"임대차계약이 종료된 후 임대인이 보증금을 반환하지 않은 경우, 임차인은 그 반환을 구할 수 있고, 임대인은 지연이자를 지급할 의무가 있다…"'
-      />
-    </div>
-  )
-}
-
-function SourceCard({
-  tag,
-  title,
-  excerpt,
-}: {
-  tag: 'law' | 'case'
-  title: string
-  excerpt: string
-}) {
-  const tagCls =
-    tag === 'law'
-      ? 'bg-primary-soft text-primary'
-      : 'bg-bg-soft-2 text-ink-soft'
-  return (
-    <div className="bg-surface border border-line rounded-xl py-3.5 px-4 mb-2 last:mb-0 cursor-pointer transition-colors hover:border-line-strong">
-      <div className="flex items-center justify-between gap-2.5 mb-1.5">
-        <span
-          className={`inline-flex items-center gap-1 py-0.75 px-2 rounded-md text-[11.5px] font-semibold ${tagCls}`}
-        >
-          {tag === 'law' ? (
-            <BookIcon className="w-2.75 h-2.75" />
-          ) : (
-            <BrandMark className="w-2.75 h-2.75" />
-          )}
-          {tag === 'law' ? '법령' : '판례'}
-        </span>
-        <span className="flex-1 text-sm font-semibold text-ink min-w-0">{title}</span>
-        <a
-          href="#"
-          className="text-[13px] font-semibold text-primary inline-flex items-center gap-0.5 shrink-0"
-        >
-          원문 보기
-          <ArrowRightIcon className="w-3 h-3" />
-        </a>
-      </div>
-      <p className="text-[13.5px] text-ink-soft leading-[1.6] m-0">{excerpt}</p>
-    </div>
-  )
-}
-
-type ActionTone = 'rent' | 'court' | 'law'
-
-const ACTIONS: {
-  icon: string
-  iconBg: ActionTone
-  title: string
-  desc: string
-  btn: { label: string; variant: 'primary' | 'outline' }
-}[] = [
-  {
-    icon: '📜',
-    iconBg: 'rent',
-    title: '내용증명 발송',
-    desc: '공식 문서로 반환을 요구합니다. AI가 초안을 작성해드려요.',
-    btn: { label: '자동 작성', variant: 'primary' },
-  },
-  {
-    icon: '🏛️',
-    iconBg: 'court',
-    title: '임차권등기명령',
-    desc: '대항력·우선변제권을 유지하기 위한 법원 신청 절차입니다.',
-    btn: { label: '더 알아보기', variant: 'outline' },
-  },
-  {
-    icon: '⚖️',
-    iconBg: 'law',
-    title: '민사조정 · 소액사건',
-    desc: '3,000만원 이하 소송사건을 빠른 절차로 진행할 수 있어요.',
-    btn: { label: '절차 보기', variant: 'outline' },
-  },
-]
-
-function ActionsBox() {
-  return (
-    <div className="mt-3.5 p-4.5 bg-bg-soft-3 rounded-xl">
-      <p className="text-[13px] font-bold text-ink m-0 mb-3 flex items-center gap-1.5">
-        <span>🎯</span> 추천 다음 액션
-      </p>
-      {ACTIONS.map((a, i) => (
-        <ActionRow key={i} index={i + 1} {...a} />
-      ))}
-    </div>
-  )
-}
-
-function ActionRow({
-  index,
-  icon,
-  iconBg,
-  title,
-  desc,
-  btn,
-}: {
-  index: number
-  icon: string
-  iconBg: ActionTone
-  title: string
-  desc: string
-  btn: { label: string; variant: 'primary' | 'outline' }
-}) {
-  const iconBgCls =
-    iconBg === 'rent'
-      ? 'bg-primary-soft'
-      : iconBg === 'court'
-      ? 'bg-warn-soft'
-      : 'bg-violet-soft'
-  const btnCls =
-    btn.variant === 'primary'
-      ? 'bg-primary text-white hover:bg-primary-hover'
-      : 'bg-surface border border-line text-ink-soft hover:bg-bg hover:border-line-strong'
-  return (
-    <div className="flex items-center gap-3 py-3.5 px-4 bg-surface border border-line rounded-xl mb-2 last:mb-0">
-      <span className="w-6 h-6 rounded-full bg-bg text-ink-soft grid place-items-center text-xs font-bold shrink-0">
-        {index}
-      </span>
-      <span
-        aria-hidden
-        className={`w-9 h-9 rounded-[10px] grid place-items-center text-lg shrink-0 ${iconBgCls}`}
-      >
-        {icon}
-      </span>
-      <div className="flex-1 min-w-0">
-        <p className="text-[14.5px] font-semibold text-ink m-0 mb-0.5">{title}</p>
-        <p className="text-[12.5px] text-ink-mute m-0">{desc}</p>
-      </div>
-      <button
-        type="button"
-        className={`h-9 px-3.5 rounded-[10px] text-[13.5px] font-semibold inline-flex items-center gap-1 shrink-0 transition-colors ${btnCls}`}
-      >
-        {btn.label}
-      </button>
-    </div>
-  )
-}
-
-function FeedbackRow() {
-  const [vote, setVote] = useState<'up' | 'down' | null>(null)
-  return (
-    <div className="flex items-center justify-end gap-0.5 mt-3.5 pt-3.5 border-t border-line">
-      <span className="mr-auto text-xs text-ink-mute">이 답변이 도움이 되셨나요?</span>
-      <FbBtn label="도움됨" active={vote === 'up'} onClick={() => setVote(vote === 'up' ? null : 'up')}>
-        <ThumbsUpIcon className="w-4 h-4" />
-      </FbBtn>
-      <FbBtn label="부정확" active={vote === 'down'} onClick={() => setVote(vote === 'down' ? null : 'down')}>
-        <ThumbsDownIcon className="w-4 h-4" />
-      </FbBtn>
-      <FbBtn label="복사">
-        <CopyIcon className="w-4 h-4" />
-      </FbBtn>
-    </div>
-  )
-}
-
-function FbBtn({
-  label,
-  active,
-  onClick,
-  children,
-}: {
-  label: string
-  active?: boolean
-  onClick?: () => void
-  children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
       onClick={onClick}
-      className={`w-8 h-8 rounded-lg grid place-items-center transition-colors ${
-        active
-          ? 'bg-primary-soft text-primary'
-          : 'text-ink-mute hover:bg-bg hover:text-ink-soft'
-      }`}
+      className="w-9 h-9 rounded-[10px] grid place-items-center text-ink-soft transition-colors hover:bg-bg"
     >
       {children}
     </button>
