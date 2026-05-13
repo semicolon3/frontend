@@ -70,7 +70,7 @@ export default function Sidebar({
         <NavLink to="/chat" active={active === 'chat'} icon={<ChatBubbleIcon className="w-4.5 h-4.5" />}>
           채팅
         </NavLink>
-        <NavLink to="/docs" active={active === 'docs'} icon={<FileTextIcon className="w-4.5 h-4.5" />}>
+        <NavLink to="/documents" active={active === 'docs'} icon={<FileTextIcon className="w-4.5 h-4.5" />}>
           내 문서
         </NavLink>
         <NavItem active={active === 'cases'} icon={<FolderCaseIcon className="w-4.5 h-4.5" />}>
