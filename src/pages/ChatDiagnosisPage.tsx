@@ -26,8 +26,13 @@ const DOMAIN_LABELS: Record<string, { emoji: string; label: string }> = {
   TRAFFIC: { emoji: '🚗', label: '교통' },
 }
 
+function parseDate(s: string): Date {
+  if (s && !s.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(s)) return new Date(s + 'Z')
+  return new Date(s)
+}
+
 function formatRelative(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
+  const diff = Date.now() - parseDate(iso).getTime()
   const m = Math.floor(diff / 60000)
   if (m < 1) return '방금'
   if (m < 60) return `${m}분 전`
@@ -42,6 +47,7 @@ export default function ChatDiagnosisPage() {
   const [input, setInput] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [recents, setRecents] = useState<Recent[]>([])
+  const [activeRecentIndex, setActiveRecentIndex] = useState<number | undefined>(undefined)
   const [messages, setMessages] = useState<Message[]>([])
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
@@ -52,6 +58,7 @@ export default function ChatDiagnosisPage() {
   const [searchParams] = useSearchParams()
   const bottomRef = useRef<HTMLDivElement>(null)
   const initSentRef = useRef(false)
+  const skipFetchRef = useRef(false)
   const navigate = useNavigate()
 
   const conversationId = searchParams.get('id') ? Number(searchParams.get('id')) : null
@@ -59,14 +66,20 @@ export default function ChatDiagnosisPage() {
 
   useEffect(() => {
     fetchConversations()
-      .then(({ content }) =>
-        setRecents(content.map((c) => ({ id: c.id, title: c.title, meta: formatRelative(c.updatedAt) })))
-      )
+      .then(({ content }) => {
+        const list = content.map((c) => ({ id: c.id, title: c.title, meta: formatRelative(c.updatedAt) }))
+        setRecents(list)
+        if (conversationId != null) {
+          const idx = list.findIndex((r) => r.id === conversationId)
+          setActiveRecentIndex(idx >= 0 ? idx : undefined)
+        }
+      })
       .catch(() => {})
-  }, [])
+  }, [conversationId])
 
   useEffect(() => {
     if (conversationId == null) { setMessages([]); setConversation(null); return }
+    if (skipFetchRef.current) { skipFetchRef.current = false; return }
     setLoadingMessages(true)
     fetchConversationById(conversationId)
       .then((detail) => {
@@ -101,6 +114,8 @@ export default function ChatDiagnosisPage() {
       try {
         const conv = await createConversation('LEASE')
         convId = conv.id
+        setConversation(conv)
+        skipFetchRef.current = true
         navigate(`/chat?id=${conv.id}`, { replace: true })
       } catch {
         return
@@ -165,7 +180,14 @@ export default function ChatDiagnosisPage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] h-screen">
-      <Sidebar active="chat" recents={recents} mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        active="chat"
+        recents={recents}
+        activeRecent={activeRecentIndex}
+        mobileOpen={sidebarOpen}
+        onMobileClose={() => setSidebarOpen(false)}
+        onRecentClick={(id) => navigate(`/chat?id=${id}`)}
+      />
 
       <section className="flex flex-col min-w-0 h-screen overflow-hidden">
         <header className="h-16 bg-surface border-b border-line flex items-center justify-between px-5 md:px-8 shrink-0">

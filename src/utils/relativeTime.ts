@@ -1,5 +1,10 @@
+function parseDate(s: string): Date {
+  if (s && !s.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(s)) return new Date(s + 'Z')
+  return new Date(s)
+}
+
 export function formatRelativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
+  const diff = Date.now() - parseDate(iso).getTime()
   const mins = Math.floor(diff / 60000)
   if (mins < 1) return '방금'
   if (mins < 60) return `${mins}분 전`
