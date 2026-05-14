@@ -16,6 +16,22 @@ export function getAccessToken(): string | null {
   return localStorage.getItem('accessToken')
 }
 
+export function isAuthenticated(): boolean {
+  const token = getAccessToken()
+  if (!token) return false
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    if (payload.exp * 1000 < Date.now()) {
+      clearTokens()
+      return false
+    }
+    return true
+  } catch {
+    clearTokens()
+    return false
+  }
+}
+
 export function getEmail(): string | null {
   return localStorage.getItem('userEmail')
 }

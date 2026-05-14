@@ -8,14 +8,14 @@ import LandingPage from './pages/LandingPage'
 import MyDocumentsPage from './pages/MyDocumentsPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
-import { getAccessToken } from './api/client'
+import { isAuthenticated } from './api/client'
 
 function PrivateRoute({ children }: { children: ReactNode }) {
-  return getAccessToken() ? <>{children}</> : <Navigate to="/" replace />
+  return isAuthenticated() ? <>{children}</> : <Navigate to="/" replace />
 }
 
 function GuestRoute({ children }: { children: ReactNode }) {
-  return getAccessToken() ? <Navigate to="/dashboard" replace /> : <>{children}</>
+  return isAuthenticated() ? <Navigate to="/dashboard" replace /> : <>{children}</>
 }
 
 function App() {
