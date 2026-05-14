@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { uploadDocument, type DocumentType } from '../../api/documents'
+import { uploadDocument, type Document, type DocumentType } from '../../api/documents'
 import { CheckIcon, FileTextIcon } from '../icons'
 
 const DOC_TYPE_LABELS: Record<DocumentType, string> = {
@@ -9,7 +9,7 @@ const DOC_TYPE_LABELS: Record<DocumentType, string> = {
   OTHER: '기타',
 }
 
-export default function UploadBox({ onUploadSuccess }: { onUploadSuccess: () => void }) {
+export default function UploadBox({ onUploadSuccess }: { onUploadSuccess: (doc: Document) => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [docType, setDocType] = useState<DocumentType>('CONTRACT')
   const [uploading, setUploading] = useState(false)
@@ -20,9 +20,9 @@ export default function UploadBox({ onUploadSuccess }: { onUploadSuccess: () => 
     setUploading(true)
     setError(null)
     try {
-      await uploadDocument(file, docType)
+      const doc = await uploadDocument(file, docType)
       setUploaded({ name: file.name, size: file.size })
-      onUploadSuccess()
+      onUploadSuccess(doc)
     } catch {
       setError('업로드에 실패했습니다. 다시 시도해주세요.')
     } finally {

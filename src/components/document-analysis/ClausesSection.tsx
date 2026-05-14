@@ -3,13 +3,7 @@ import type { RiskClause } from '../../api/documents'
 import { AlertIcon, BookIcon, CheckIcon, ChevronDownIcon, SearchIcon, SparklesIcon } from '../icons'
 import { severityToTone, type ClauseTone } from './constants'
 
-type Props = {
-  openClauses: boolean[]
-  toggleClause: (i: number) => void
-  riskClauses: RiskClause[] | null
-}
-
-export default function ClausesSection({ openClauses, toggleClause, riskClauses }: Props) {
+export default function ClausesSection({ riskClauses }: { riskClauses: RiskClause[] | null }) {
   const [dynamicOpen, setDynamicOpen] = useState<boolean[]>([])
 
   useEffect(() => {
@@ -50,26 +44,7 @@ export default function ClausesSection({ openClauses, toggleClause, riskClauses 
   return (
     <>
       {header}
-      <ClauseCard
-        tone="high" title="제5조 · 보증금 반환 시기"
-        open={openClauses[0]} onToggle={() => toggleClause(0)}
-        quote='"보증금 반환 시기는 임대인이 임의로 결정한다. 임차인은 이에 이의를 제기할 수 없다."'
-        reason={<><strong>주택임대차보호법 위반 소지가 있어요.</strong> 반환 시기를 일방적으로 정할 수 없습니다.</>}
-        laws={['주택임대차보호법 제3조의2', '대법원 2019다252178']}
-        suggestion='"임대인은 계약 종료일로부터 7일 이내에 보증금을 반환한다."'
-      />
-      <ClauseCard
-        tone="mid" title="제8조 · 원상복구 비용 범위"
-        open={openClauses[1]} onToggle={() => toggleClause(1)}
-        quote='"계약 종료 시 임차인은 일체의 원상복구 비용을 부담하며, 그 범위는 임대인이 정한다."'
-        reason={<><strong>통상적 사용으로 인한 마모는 임차인 부담이 아닙니다.</strong></>}
-      />
-      <ClauseCard
-        tone="low" title="제2조 · 임대료 지급"
-        open={openClauses[2]} onToggle={() => toggleClause(2)}
-        quote='"보증금 일금 오천만원정(₩50,000,000)은 계약일에 지불한다."'
-        reason={<>표준 임대차계약서 양식에 부합합니다.</>}
-      />
+      <p className="text-sm text-ink-mute text-center py-8">문서를 업로드하면 조항별 분석 결과가 표시됩니다.</p>
     </>
   )
 }

@@ -8,8 +8,12 @@ const EXAMPLES = [
   '계약서를 검토하고 싶어요',
 ]
 
-export default function FreeInputCard() {
+export default function FreeInputCard({ onSubmit }: { onSubmit: (query: string) => void }) {
   const [query, setQuery] = useState('')
+
+  const handleSubmit = () => {
+    if (query.trim()) onSubmit(query.trim())
+  }
 
   return (
     <section className="bg-surface border border-line rounded-[20px] py-8 px-9 shadow-card-sm">
@@ -28,11 +32,13 @@ export default function FreeInputCard() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit() }}
           placeholder="겪고 계신 상황을 자유롭게 입력해주세요. 예: 집주인이 보증금을 안 돌려줘서요"
           className="flex-1 bg-transparent outline-none h-full text-[15px] text-ink placeholder:text-ink-mute tracking-[-0.01em]"
         />
         <button
           type="button"
+          onClick={handleSubmit}
           className="h-12 px-5 rounded-xl bg-primary text-white text-[14.5px] font-semibold inline-flex items-center gap-1.5 shrink-0 hover:bg-primary-hover transition-colors"
         >
           <span>보내기</span>

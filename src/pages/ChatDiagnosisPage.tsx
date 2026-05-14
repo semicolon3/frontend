@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Sidebar, { type Recent } from '../components/Sidebar'
-import { fetchConversations, fetchConversationById, sendMessage, deleteConversation, updateConversation, type Message, type Conversation } from '../api/conversations'
+import { fetchConversations, fetchConversationById, createConversation, sendMessage, deleteConversation, updateConversation, type Message, type Conversation } from '../api/conversations'
 import {
   ArrowUpIcon,
   AttachIcon,
@@ -51,9 +51,11 @@ export default function ChatDiagnosisPage() {
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [searchParams] = useSearchParams()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const initSentRef = useRef(false)
   const navigate = useNavigate()
 
   const conversationId = searchParams.get('id') ? Number(searchParams.get('id')) : null
+  const initMessage = searchParams.get('init')
 
   useEffect(() => {
     fetchConversations()
@@ -76,17 +78,40 @@ export default function ChatDiagnosisPage() {
   }, [conversationId])
 
   useEffect(() => {
+    if (!initMessage || conversationId == null || loadingMessages || initSentRef.current) return
+    if (messages.length > 0) return
+    initSentRef.current = true
+    const text = initMessage
+    setMessages([{ id: Date.now(), role: 'USER', content: text, citations: [], createdAt: new Date().toISOString() }])
+    setSending(true)
+    sendMessage(conversationId, text)
+      .then((reply) => setMessages((prev) => [...prev, reply]))
+      .catch(() => {})
+      .finally(() => setSending(false))
+  }, [conversationId, initMessage, loadingMessages, messages.length])
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   const handleSend = async () => {
-    if (!input.trim() || conversationId == null || sending) return
+    if (!input.trim() || sending) return
+    let convId = conversationId
+    if (convId == null) {
+      try {
+        const conv = await createConversation('LEASE')
+        convId = conv.id
+        navigate(`/chat?id=${conv.id}`, { replace: true })
+      } catch {
+        return
+      }
+    }
     const text = input.trim()
     setInput('')
     setMessages((prev) => [...prev, { id: Date.now(), role: 'USER', content: text, citations: [], createdAt: new Date().toISOString() }])
     setSending(true)
     try {
-      const reply = await sendMessage(conversationId, text)
+      const reply = await sendMessage(convId, text)
       setMessages((prev) => [...prev, reply])
     } catch {
       // keep the user message visible but don't crash
@@ -326,7 +351,7 @@ export default function ChatDiagnosisPage() {
                 type="button"
                 aria-label="전송"
                 onClick={handleSend}
-                disabled={!input.trim() || sending || conversationId == null}
+                disabled={!input.trim() || sending}
                 className="w-10 h-10 rounded-xl bg-primary text-white grid place-items-center shrink-0 transition-colors hover:bg-primary-hover disabled:bg-line-strong disabled:cursor-not-allowed"
               >
                 <ArrowUpIcon className="w-4.5 h-4.5" />
