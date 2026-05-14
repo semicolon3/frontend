@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes, type ReactNode } from 'react-router-dom'
+import { type ReactNode } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import AccountPage from './pages/AccountPage'
 import ChatDiagnosisPage from './pages/ChatDiagnosisPage'
 import DashboardPage from './pages/DashboardPage'
