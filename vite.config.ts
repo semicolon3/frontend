@@ -23,8 +23,11 @@ export default defineConfig(({ mode }) => {
           target: apiBaseUrl,
           changeOrigin: true,
           secure: false,
-          headers: {
-            Origin: apiBaseUrl,
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq) => {
+              proxyReq.removeHeader('origin')
+              proxyReq.removeHeader('referer')
+            })
           },
         },
       },
