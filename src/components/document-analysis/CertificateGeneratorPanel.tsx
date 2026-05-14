@@ -1,5 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { createGeneratedDocument, downloadDocumentPdf } from '../../api/generatedDocuments'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
+import { createGeneratedDocument } from '../../api/generatedDocuments'
 import { fetchTemplates, type DocumentTemplate } from '../../api/templates'
 import { DownloadIcon, SparklesIcon, XIcon } from '../icons'
 
@@ -21,6 +23,7 @@ export default function CertificateGeneratorPanel({ open, onClose, onSuccess }: 
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const certRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -33,6 +36,7 @@ export default function CertificateGeneratorPanel({ open, onClose, onSuccess }: 
   }, [open])
 
   const handleSubmit = async () => {
+    if (!certRef.current) return
     setLoading(true)
     setError(null)
     try {
@@ -41,13 +45,15 @@ export default function CertificateGeneratorPanel({ open, onClose, onSuccess }: 
         title: `내용증명 · ${sender.split('/')[0].trim()}`,
         fields: { sender, recipient, amount, deadline, reason },
       })
-      const blob = await downloadDocumentPdf(doc.id)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${doc.title}.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
+
+      const canvas = await html2canvas(certRef.current, { scale: 3, useCORS: true })
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pdfW = pdf.internal.pageSize.getWidth()
+      const pdfH = (canvas.height * pdfW) / canvas.width
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH)
+      pdf.save(`${doc.title}.pdf`)
+
       onSuccess()
       onClose()
     } catch {
@@ -56,6 +62,11 @@ export default function CertificateGeneratorPanel({ open, onClose, onSuccess }: 
       setLoading(false)
     }
   }
+
+  const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '. ').replace(/\.$/, '.')
+  const senderName = sender.split('/')[0].trim()
+  const recipientName = recipient.split('/')[0].trim()
+  const recipientAddr = recipient.split('/')[1]?.trim() ?? ''
 
   return (
     <>
@@ -75,7 +86,7 @@ export default function CertificateGeneratorPanel({ open, onClose, onSuccess }: 
         <div className="py-5.5 px-6 pb-4 border-b border-line flex items-center justify-between shrink-0">
           <div>
             <h2 className="m-0 text-[19px] font-bold text-ink tracking-[-0.02em]">내용증명 자동 생성</h2>
-            <div className="text-[12.5px] text-ink-mute mt-0.5">제5조 위험 조항 기반 · AI가 자동 작성했어요</div>
+            <div className="text-[12.5px] text-ink-mute mt-0.5">AI가 자동 작성했어요</div>
           </div>
           <button
             type="button"
@@ -136,7 +147,6 @@ export default function CertificateGeneratorPanel({ open, onClose, onSuccess }: 
               onChange={(e) => setReason(e.target.value)}
               className="w-full border border-line rounded-[10px] py-2.5 px-3 text-[13.5px] text-ink bg-surface transition-all leading-normal outline-none min-h-28 resize-y focus:border-primary focus:ring-[3px] focus:ring-primary/12"
             />
-            <div className="text-[11.5px] text-ink-mute mt-1">주택임대차보호법 제3조의2에 근거하여 작성됨</div>
           </FormRow>
 
           <div className="mt-5.5 pt-5.5 border-t border-dashed border-line">
@@ -144,7 +154,17 @@ export default function CertificateGeneratorPanel({ open, onClose, onSuccess }: 
               <h4 className="m-0 text-[13px] font-bold text-ink">문서 미리보기</h4>
               <span className="text-[11px] text-ink-mute">A4 · 1페이지</span>
             </div>
-            <CertDoc />
+            <CertDoc
+              ref={certRef}
+              sender={sender}
+              senderName={senderName}
+              recipient={recipientName}
+              recipientAddr={recipientAddr}
+              amount={amount}
+              deadline={deadline}
+              reason={reason}
+              today={today}
+            />
           </div>
         </div>
 
@@ -165,7 +185,7 @@ export default function CertificateGeneratorPanel({ open, onClose, onSuccess }: 
               className="h-12 rounded-[14px] bg-primary text-white text-[14.5px] font-bold inline-flex items-center justify-center gap-1.5 transition-colors hover:bg-primary-hover active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <DownloadIcon className="w-4 h-4" />
-              {loading ? '저장 중…' : 'PDF 다운로드'}
+              {loading ? 'PDF 생성 중…' : 'PDF 다운로드'}
             </button>
           </div>
         </div>
@@ -204,45 +224,57 @@ function PanelInput({ value, onChange, amount }: { value: string; onChange: (v: 
   )
 }
 
-function CertDoc() {
-  return (
-    <div className="bg-white border border-line rounded-md shadow-[0_2px_8px_rgba(0,0,0,0.06)] aspect-210/297 py-6 px-6.5 font-['Nanum_Myeongjo',serif] text-[#111] text-[9px] leading-[1.7] overflow-hidden relative">
-      <h3 className="text-center m-0 mb-1 text-lg font-extrabold tracking-[0.5em] pl-2 text-[#111]">내 용 증 명</h3>
-      <div className="text-right text-[#555] text-[7.5px] m-0 mb-3.5 font-['Pretendard_Variable',sans-serif] font-medium">
-        발송일자: 2026. 03. 02.
-      </div>
-      <div className="my-2 text-[8px]">
-        <b className="inline-block w-9.5 text-[#444]">수 신</b>박상열 귀하 (서울시 송파구 송이로 123)
-      </div>
-      <div className="my-2 text-[8px]">
-        <b className="inline-block w-9.5 text-[#444]">발 신</b>홍길동 (서울시 강남구 테헤란로 456)
-      </div>
-      <div className="text-center font-bold my-3.5 mb-3 text-[11px] underline underline-offset-4">
-        제 목 : 임대차보증금 반환 청구의 건
-      </div>
-      <div>
-        <p className="m-0 mb-1.5 text-justify text-[#1a1a1a] indent-[0.6em]">귀댁의 안녕과 번영을 기원합니다.</p>
-        <p className="m-0 mb-1.5 text-justify text-[#1a1a1a] indent-[0.6em]">
-          본인은 귀하와 2024. 3. 1.에 별첨 임대차계약을 체결하고, 보증금 일금 오천만원(₩50,000,000)을 지급한 임차인입니다.
-        </p>
-        <p className="m-0 mb-1.5 text-justify text-[#1a1a1a] indent-[0.6em]">
-          계약기간 만료일인 2026. 2. 28.까지 계약상 의무를 성실히 이행하였음에도, 귀하께서 보증금 반환을 지연하고 계시므로 다음과 같이 청구합니다.
-        </p>
-        <p className="m-0 mb-1.5 text-justify text-[#1a1a1a] indent-[0.6em]">
-          <b>본 내용증명 도달로부터 7일 이내</b>에 임대차보증금 일금 오천만원 전액을 반환하여 주시기 바랍니다.
-        </p>
-        <p className="m-0 mb-1.5 text-justify text-[#1a1a1a] indent-[0.6em]">
-          위 기한 내 이행하지 아니할 경우, 부득이 법적 절차를 진행할 수밖에 없음을 알려드립니다.
-        </p>
-      </div>
-      <div className="mt-3.5 text-right text-[8px]">
-        2026. 3. 2.
-        <br />
-        발신인 홍 길 동
-        <span className="inline-block w-7 h-7 border-[1.5px] border-danger rounded-full text-danger text-center leading-6.5 text-[9px] font-extrabold ml-1 rotate-[-8deg]">
-          印
-        </span>
-      </div>
-    </div>
-  )
+type CertDocProps = {
+  sender: string
+  senderName: string
+  recipient: string
+  recipientAddr: string
+  amount: string
+  deadline: string
+  reason: string
+  today: string
 }
+
+import { forwardRef } from 'react'
+
+const CertDoc = forwardRef<HTMLDivElement, CertDocProps>(
+  ({ senderName, recipient, recipientAddr, amount, deadline, reason, today }, ref) => {
+    return (
+      <div
+        ref={ref}
+        style={{ fontFamily: 'Nanum Myeongjo, serif', backgroundColor: '#fff' }}
+        className="border border-line rounded-md shadow-[0_2px_8px_rgba(0,0,0,0.06)] aspect-210/297 py-6 px-6.5 text-[#111] text-[9px] leading-[1.7] overflow-hidden"
+      >
+        <h3 className="text-center m-0 mb-1 text-lg font-extrabold tracking-[0.5em] pl-2 text-[#111]">내 용 증 명</h3>
+        <div className="text-right text-[#555] text-[7.5px] m-0 mb-3.5" style={{ fontFamily: 'Pretendard Variable, sans-serif' }}>
+          발송일자: {today}
+        </div>
+        <div className="my-2 text-[8px]">
+          <b className="inline-block w-9.5 text-[#444]">수 신</b>{recipient} 귀하 {recipientAddr ? `(${recipientAddr})` : ''}
+        </div>
+        <div className="my-2 text-[8px]">
+          <b className="inline-block w-9.5 text-[#444]">발 신</b>{senderName}
+        </div>
+        <div className="text-center font-bold my-3.5 mb-3 text-[11px] underline underline-offset-4">
+          제 목 : 청구의 건
+        </div>
+        <div>
+          <p className="m-0 mb-1.5 text-justify text-[#1a1a1a] indent-[0.6em]">귀댁의 안녕과 번영을 기원합니다.</p>
+          <p className="m-0 mb-1.5 text-justify text-[#1a1a1a] indent-[0.6em]">{reason}</p>
+          <p className="m-0 mb-1.5 text-justify text-[#1a1a1a] indent-[0.6em]">
+            청구 금액: <b>{amount}</b> · 요청 기한: <b>{deadline}</b>
+          </p>
+          <p className="m-0 mb-1.5 text-justify text-[#1a1a1a] indent-[0.6em]">
+            위 기한 내 이행하지 아니할 경우, 부득이 법적 절차를 진행할 수밖에 없음을 알려드립니다.
+          </p>
+        </div>
+        <div className="mt-3.5 text-right text-[8px]">
+          {today}
+          <br />
+          발신인 {senderName.split('').join(' ')}
+        </div>
+      </div>
+    )
+  }
+)
+CertDoc.displayName = 'CertDoc'
