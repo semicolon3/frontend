@@ -23,6 +23,9 @@ export default defineConfig(({ mode }) => {
           target: apiBaseUrl,
           changeOrigin: true,
           secure: false,
+          headers: {
+            Origin: apiBaseUrl,
+          },
         },
       },
     },
