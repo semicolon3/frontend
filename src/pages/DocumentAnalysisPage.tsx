@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Sidebar, { type Recent } from '../components/Sidebar'
 import IconBtn from '../components/IconBtn'
 import StatusBadge from '../components/document-analysis/StatusBadge'
@@ -14,7 +14,7 @@ import { FileTextIcon, MenuIcon, MoreHorizIcon, ShareNetworkIcon } from '../comp
 import { formatRelativeTime } from '../utils/relativeTime'
 
 export default function DocumentAnalysisPage() {
-  const [openClauses, setOpenClauses] = useState<boolean[]>([true, false, false])
+  const navigate = useNavigate()
   const [panelOpen, setPanelOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [recents, setRecents] = useState<Recent[]>([])
@@ -23,6 +23,23 @@ export default function DocumentAnalysisPage() {
   const [activeRecentIndex, setActiveRecentIndex] = useState<number | undefined>(undefined)
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchParams] = useSearchParams()
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const stopPolling = () => {
+    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null }
+  }
+
+  const startPolling = (docId: number) => {
+    stopPolling()
+    pollingRef.current = setInterval(() => {
+      fetchDocumentAnalysis(docId)
+        .then((data) => {
+          setAnalysisData(data)
+          if (data.analysisStatus === 'COMPLETED' || data.analysisStatus === 'FAILED') stopPolling()
+        })
+        .catch(() => {})
+    }, 3000)
+  }
 
   const loadRecents = () =>
     fetchDocuments()
@@ -30,11 +47,6 @@ export default function DocumentAnalysisPage() {
         setRecents(docs.map((d) => ({ id: d.id, title: d.originalFileName, meta: formatRelativeTime(d.createdAt) })))
       )
       .catch(() => {})
-
-  useEffect(() => {
-    const t = setTimeout(() => setPanelOpen(true), 300)
-    return () => clearTimeout(t)
-  }, [])
 
   useEffect(() => { loadRecents() }, [])
 
@@ -44,7 +56,10 @@ export default function DocumentAnalysisPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
+  useEffect(() => () => stopPolling(), [])
+
   const handleRecentClick = (id: number) => {
+    stopPolling()
     setAnalysisData(null)
     fetchDocumentById(id)
       .then((doc) => {
@@ -53,12 +68,12 @@ export default function DocumentAnalysisPage() {
         setSelectedDoc(doc)
         return fetchDocumentAnalysis(id)
       })
-      .then(setAnalysisData)
+      .then((data) => {
+        setAnalysisData(data)
+        if (data.analysisStatus !== 'COMPLETED' && data.analysisStatus !== 'FAILED') startPolling(id)
+      })
       .catch(() => {})
   }
-
-  const toggleClause = (i: number) =>
-    setOpenClauses((arr) => arr.map((v, idx) => (idx === i ? !v : v)))
 
   const handleDelete = () => {
     if (!selectedDoc) return
@@ -144,17 +159,13 @@ export default function DocumentAnalysisPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
               <div>
-                <UploadBox onUploadSuccess={loadRecents} />
-                <DocPreview />
+                <UploadBox onUploadSuccess={(doc) => { loadRecents(); handleRecentClick(doc.id) }} />
+                <DocPreview doc={selectedDoc} />
               </div>
               <div>
                 <SummaryCard analysis={analysisData} />
                 <RiskStats riskClauses={analysisData?.riskClauses ?? null} />
-                <ClausesSection
-                  openClauses={openClauses}
-                  toggleClause={toggleClause}
-                  riskClauses={analysisData?.riskClauses ?? null}
-                />
+                <ClausesSection riskClauses={analysisData?.riskClauses ?? null} />
                 <div className="mt-5 flex flex-col gap-2.5">
                   <button
                     type="button"
@@ -166,6 +177,7 @@ export default function DocumentAnalysisPage() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => navigate('/chat')}
                     className="h-12 rounded-xl bg-surface border border-line-strong text-ink-soft text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors hover:border-primary hover:text-primary"
                   >
                     <svg

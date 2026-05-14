@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createConversation } from '../api/conversations'
+import { fetchMe, type UserMe } from '../api/user'
 import {
   BrandMark,
   ChatBubbleIcon,
@@ -41,6 +42,11 @@ export default function Sidebar({
 }) {
   const navigate = useNavigate()
   const [starting, setStarting] = useState(false)
+  const [me, setMe] = useState<UserMe | null>(null)
+
+  useEffect(() => {
+    fetchMe().then(setMe).catch(() => {})
+  }, [])
 
   const handleNewChat = async () => {
     if (onNewChat) { onNewChat(); return }
@@ -65,12 +71,12 @@ export default function Sidebar({
         }`}
       />
     <aside className={`bg-surface border-r border-line flex flex-col w-[260px] fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0.24,1)] lg:sticky lg:h-screen lg:z-auto lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className="px-4 pt-5 pb-3 flex items-center gap-2">
+      <Link to="/dashboard" className="px-4 pt-5 pb-3 flex items-center gap-2">
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-primary-hover grid place-items-center text-white">
           <BrandMark className="w-4 h-4" />
         </div>
         <span className="text-base font-bold text-ink tracking-[-0.02em]">Legal AI</span>
-      </div>
+      </Link>
 
       <button
         type="button"
@@ -137,9 +143,9 @@ export default function Sidebar({
         className="m-2 py-2.5 px-3 flex items-center gap-2.5 rounded-xl bg-bg hover:bg-bg-soft-2 transition-colors"
       >
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#b8d4ff] to-primary text-white grid place-items-center text-[13px] font-semibold shrink-0">
-          홍
+          {me?.name?.[0] ?? '?'}
         </div>
-        <span className="flex-1 text-sm font-semibold text-ink text-left">홍길동</span>
+        <span className="flex-1 text-sm font-semibold text-ink text-left">{me?.name ?? ''}</span>
       </Link>
     </aside>
     </>
